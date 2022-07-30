@@ -25,17 +25,6 @@ func main() {
 		return
 	}
 
-	rows, err := db.Query("select id, title, body from post order by id desc;")
-	check(err)
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		var title string
-		var body string
-		err = rows.Scan(&id, &title, &body)
-		check(err)
-		fmt.Printf("(%d) %s: %s\n", id, title, body)
-	}
-	err = rows.Err()
-	check(err)
+	posts := QueryPosts(db)
+	fmt.Println(posts)
 }
