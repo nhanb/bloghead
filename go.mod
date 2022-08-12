@@ -1,5 +1,5 @@
-module git.sr.ht/~nhanb/bloghead
+module go.imnhan.com/bloghead
 
-go 1.18
+go 1.19
 
 require github.com/mattn/go-sqlite3 v1.14.14

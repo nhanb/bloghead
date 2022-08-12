@@ -1,30 +1,25 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
-	"os"
+	"net/http"
 
-	_ "github.com/mattn/go-sqlite3"
+	"go.imnhan.com/bloghead/models"
 )
 
 const dbfile = "Site1.bloghead"
-const initsql = "initdb.sql"
 
 func main() {
-	db, err := sql.Open("sqlite3", dbfile)
-	check(err)
-	defer db.Close()
+	models.InitDb(dbfile)
 
-	sqlStmt, err := os.ReadFile(initsql)
-	check(err)
-	_, err = db.Exec(string(sqlStmt))
-	if err != nil {
-		log.Printf("%q: %s\n", err, sqlStmt)
-		return
+	http.HandleFunc("/", handler)
+	log.Fatal(http.ListenAndServe(":8000", nil))
+}
+
+func handler(w http.ResponseWriter, r *http.Request) {
+	posts := models.QueryPosts()
+	for _, p := range posts {
+		fmt.Fprintf(w, "%v", p)
 	}
-
-	posts := QueryPosts(db)
-	fmt.Println(posts)
 }
