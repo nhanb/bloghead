@@ -1,2 +1,5 @@
 run:
-	go run *.go
+	go run main.go
+
+watch:
+	find . -name '*.go' | entr -rc go run main.go

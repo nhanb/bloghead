@@ -9,12 +9,15 @@ import (
 )
 
 const dbfile = "Site1.bloghead"
+const port = 8000
 
 func main() {
 	models.InitDb(dbfile)
 
 	http.HandleFunc("/", handler)
-	log.Fatal(http.ListenAndServe(":8000", nil))
+
+	fmt.Printf("Listening on port %d\n", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {

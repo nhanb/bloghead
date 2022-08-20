@@ -1,5 +1,3 @@
 # Dev
 
-```sh
-make
-```
+See Makefile.
