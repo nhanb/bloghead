@@ -1,3 +1,6 @@
 # Dev
 
-See Makefile.
+```sh
+make init-db
+make watch
+```

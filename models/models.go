@@ -18,25 +18,26 @@ func InitDb(dbfile string) {
 }
 
 type Site struct {
-	name        string
-	description string
+	Name        string
+	Description string
 }
 
 type Post struct {
-	id    int64
-	title string
-	body  string
+	Id    int64
+	Path  string
+	Title string
+	Body  string
 }
 
 func QueryPosts() (posts []Post) {
-	rows, err := db.Query("select id, title, body from post order by id desc;")
+	rows, err := db.Query("select id, path, title, body from post order by id desc;")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.id, &p.title, &p.body)
+		err = rows.Scan(&p.Id, &p.Path, &p.Title, &p.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,11 +51,12 @@ func QueryPosts() (posts []Post) {
 	return posts
 }
 
-func QuerySite() (s *Site) {
+func QuerySite() *Site {
+	var s Site
 	row := db.QueryRow("select name, description from site;")
-	err := row.Scan(&s.name, &s.description)
+	err := row.Scan(&s.Name, &s.Description)
 	if err != nil {
 		panic(err)
 	}
-	return s
+	return &s
 }
