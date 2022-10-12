@@ -8,22 +8,27 @@ import (
 	"go.imnhan.com/bloghead/models"
 )
 
-const dbfile = "Site1.bloghead"
-const port = 8000
-const outdir = "www"
+const Dbfile = "Site1.bloghead"
+const Port = 8000
+const Outdir = "www"
+const PreviewPath = "/www/"
 
 func main() {
-	models.InitDb(dbfile)
+	models.InitDb(Dbfile)
 
-	GenerateSite(outdir)
+	GenerateSite(Outdir)
 
-	http.HandleFunc("/", handler)
+	http.Handle(
+		PreviewPath,
+		http.StripPrefix(PreviewPath, http.FileServer(http.Dir(Outdir))),
+	)
+	http.HandleFunc("/", indexHandler)
 
-	fmt.Printf("Listening on port %d\n", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	fmt.Printf("Listening on port %d\n", Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Port), nil))
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	site := models.QuerySite()
 	fmt.Fprintf(w, "<h1>%s</h1>\n<p>%s</p>", site.Name, site.Description)
 
@@ -37,4 +42,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 	fmt.Fprintln(w, "</ul>")
+
+	fmt.Fprintln(w, "<a href='www'>Preview output</a>")
 }
