@@ -9,7 +9,7 @@ import (
 
 var db *sql.DB
 
-func InitDb(dbfile string) {
+func Init(dbfile string) {
 	var err error
 	db, err = sql.Open("sqlite3", dbfile)
 	if err != nil {
@@ -18,26 +18,26 @@ func InitDb(dbfile string) {
 }
 
 type Site struct {
-	Name        string
-	Description string
+	Title   string
+	Tagline string
 }
 
 type Post struct {
-	Id    int64
-	Path  string
-	Title string
-	Body  string
+	Id      int64
+	Path    string
+	Title   string
+	Content string
 }
 
 func QueryPosts() (posts []Post) {
-	rows, err := db.Query("select id, path, title, body from post order by id desc;")
+	rows, err := db.Query("select id, path, title, content from post order by id desc;")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.Id, &p.Path, &p.Title, &p.Body)
+		err = rows.Scan(&p.Id, &p.Path, &p.Title, &p.Content)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -53,8 +53,8 @@ func QueryPosts() (posts []Post) {
 
 func QuerySite() *Site {
 	var s Site
-	row := db.QueryRow("select name, description from site;")
-	err := row.Scan(&s.Name, &s.Description)
+	row := db.QueryRow("select title, tagline from site;")
+	err := row.Scan(&s.Title, &s.Tagline)
 	if err != nil {
 		panic(err)
 	}

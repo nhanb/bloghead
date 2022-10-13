@@ -1,0 +1,30 @@
+{{define "title"}}Create new Post{{end}}
+
+{{define "body"}}
+<h1>New post</h1>
+
+<form action="." method="post">
+  <label for="title">
+    Title:<br />
+    <input type="text" name="title" id="title" />
+  </label>
+  <label for="content">
+    Content:<br />
+    <textarea id="content" name="content" cols="30" rows="10"></textarea>
+  </label>
+
+  <input type="submit" value="Save">
+</form>
+
+<style>
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  input,
+  textarea {
+    width: 100%;
+  }
+</style>
+{{end}}

@@ -15,7 +15,7 @@ func GenerateSite(outdir string) {
 			log.Fatalf("Failed to mkdir for post #%d (%s): %s", p.Id, p.Title, err)
 		}
 
-		err = os.WriteFile(outdir+"/"+p.Path+"/index.html", []byte(p.Body), 0660)
+		err = os.WriteFile(outdir+"/"+p.Path+"/index.html", []byte(p.Content), 0660)
 		if err != nil {
 			log.Fatal(err)
 		}

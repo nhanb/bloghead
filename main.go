@@ -1,7 +1,9 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -13,35 +15,71 @@ const Port = 8000
 const Outdir = "www"
 const PreviewPath = "/www/"
 
+//go:embed templates
+var tmplsFS embed.FS
+
+type Templates struct {
+	NewPost *template.Template
+	Home    *template.Template
+}
+
+var tmpls Templates
+
 func main() {
-	models.InitDb(Dbfile)
+	models.Init(Dbfile)
+
+	tmpls = Templates{
+		Home: template.Must(template.ParseFS(
+			tmplsFS,
+			"templates/base.tmpl",
+			"templates/home.tmpl",
+		)),
+		NewPost: template.Must(template.ParseFS(
+			tmplsFS,
+			"templates/base.tmpl",
+			"templates/new-post.tmpl",
+		)),
+	}
 
 	GenerateSite(Outdir)
 
+	http.HandleFunc("/", homeHandler)
+	http.HandleFunc("/new", newPostHandler)
 	http.Handle(
 		PreviewPath,
 		http.StripPrefix(PreviewPath, http.FileServer(http.Dir(Outdir))),
 	)
-	http.HandleFunc("/", indexHandler)
 
 	fmt.Printf("Listening on port %d\n", Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Port), nil))
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	site := models.QuerySite()
-	fmt.Fprintf(w, "<h1>%s</h1>\n<p>%s</p>", site.Name, site.Description)
-
-	posts := models.QueryPosts()
-	fmt.Fprintln(w, "<ul>")
-	for _, p := range posts {
-		fmt.Fprintf(
-			w,
-			"<li><code>%s/</code> - <b>%s</b> - %s</li>",
-			p.Path, p.Title, p.Body,
-		)
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 Not Fun :("))
+		return
 	}
-	fmt.Fprintln(w, "</ul>")
+	site := models.QuerySite()
+	posts := models.QueryPosts()
 
-	fmt.Fprintln(w, "<a href='www'>Preview output</a>")
+	err := tmpls.Home.Execute(w,
+		struct {
+			Site  *models.Site
+			Posts []models.Post
+		}{
+			Site:  site,
+			Posts: posts,
+		},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func newPostHandler(w http.ResponseWriter, r *http.Request) {
+	err := tmpls.NewPost.Execute(w, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
