@@ -1,0 +1,32 @@
+{{define "title"}}Create new Post{{end}}
+
+{{define "body"}}
+<h1>Settings</h1>
+
+<form action="{{.Paths.Settings}}" method="post">
+  <label for="title">
+    Site title:<br />
+    <input type="text" name="title" id="title" value="{{.Site.Title}}" />
+  </label>
+
+  <label for="tagline">
+    Tagline:<br />
+    <input type="text" name="tagline" id="tagline" value="{{.Site.Tagline}}" />
+  </label>
+
+  <input type="submit" value="Save" />
+  <input type="hidden" name="csrf" value="{{.CsrfToken}}" />
+</form>
+
+<style>
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  input,
+  textarea {
+    width: 100%;
+  }
+</style>
+{{end}}

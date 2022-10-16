@@ -5,11 +5,11 @@
 <p>{{.Site.Tagline}}</p>
 
 <ul>
-    <li><a href="new">New post</a></li>
+    <li><a href="{{.Paths.NewPost}}">New post</a></li>
     {{range .Posts}}
     <li><code>{{.Path}}</code> - <b>{{.Title}}</b> - {{.Content}}</li>
     {{end}}
 </ul>
 
-<p><a href='www'>Preview output</a></p>
+<p><a href="{{.Paths.Preview}}">Preview output</a></p>
 {{end}}

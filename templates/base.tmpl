@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <title>{{template "title" .}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:,"> <!-- TODO: add favicon -->
 
     <style>
       /* Global look and feel */
@@ -44,8 +45,8 @@
   <body>
     <nav>
     <ul>
-        <li><a href="/">Posts</a></li>
-        <li><a href="/settings">Settings</a></li>
+        <li><a href="{{.Paths.Home}}">Posts</a></li>
+        <li><a href="{{.Paths.Settings}}">Settings</a></li>
     </ul>
     </nav>
 

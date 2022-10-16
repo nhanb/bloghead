@@ -13,14 +13,28 @@ import (
 const Dbfile = "Site1.bloghead"
 const Port = 8000
 const Outdir = "www"
-const PreviewPath = "/www/"
+
+type PathDefs struct {
+	Home     string
+	Preview  string
+	Settings string
+	NewPost  string
+}
+
+var Paths = PathDefs{
+	Home:     "/",
+	Preview:  "/www",
+	Settings: "/settings",
+	NewPost:  "/new",
+}
 
 //go:embed templates
 var tmplsFS embed.FS
 
 type Templates struct {
-	NewPost *template.Template
-	Home    *template.Template
+	Home     *template.Template
+	Settings *template.Template
+	NewPost  *template.Template
 }
 
 var tmpls Templates
@@ -34,6 +48,11 @@ func main() {
 			"templates/base.tmpl",
 			"templates/home.tmpl",
 		)),
+		Settings: template.Must(template.ParseFS(
+			tmplsFS,
+			"templates/base.tmpl",
+			"templates/settings.tmpl",
+		)),
 		NewPost: template.Must(template.ParseFS(
 			tmplsFS,
 			"templates/base.tmpl",
@@ -43,11 +62,12 @@ func main() {
 
 	GenerateSite(Outdir)
 
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/new", newPostHandler)
+	http.HandleFunc(Paths.Home, homeHandler)
+	http.HandleFunc(Paths.Settings, settingsHandler)
+	http.HandleFunc(Paths.NewPost, newPostHandler)
 	http.Handle(
-		PreviewPath,
-		http.StripPrefix(PreviewPath, http.FileServer(http.Dir(Outdir))),
+		Paths.Preview,
+		http.StripPrefix(Paths.Preview, http.FileServer(http.Dir(Outdir))),
 	)
 
 	fmt.Printf("Listening on port %d\n", Port)
@@ -55,7 +75,7 @@ func main() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
+	if r.URL.Path != Paths.Home {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("404 Not Fun :("))
 		return
@@ -67,9 +87,11 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		struct {
 			Site  *models.Site
 			Posts []models.Post
+			Paths PathDefs
 		}{
 			Site:  site,
 			Posts: posts,
+			Paths: Paths,
 		},
 	)
 	if err != nil {
@@ -78,8 +100,33 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newPostHandler(w http.ResponseWriter, r *http.Request) {
-	err := tmpls.NewPost.Execute(w, nil)
+	err := tmpls.NewPost.Execute(w, struct{ Paths PathDefs }{Paths: Paths})
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func settingsHandler(w http.ResponseWriter, r *http.Request) {
+	csrfToken := CsrfCheck(w, r)
+	if csrfToken == "" {
+		return
+	}
+
+	switch r.Method {
+	case "GET":
+		site := models.QuerySite()
+		err := tmpls.Settings.Execute(w, struct {
+			Site      models.Site
+			Paths     PathDefs
+			CsrfToken string
+		}{
+			Site:      *site,
+			Paths:     Paths,
+			CsrfToken: csrfToken,
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "POST":
 	}
 }
