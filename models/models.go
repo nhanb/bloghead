@@ -60,3 +60,7 @@ func QuerySite() *Site {
 	}
 	return &s
 }
+
+func SaveSettings(title string, tagline string) {
+	db.Exec("update site set title=?, tagline=?;", title, tagline)
+}

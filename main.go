@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"time"
 
 	"go.imnhan.com/bloghead/models"
 )
@@ -112,21 +113,32 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var site *models.Site
+	var msg string
+
 	switch r.Method {
 	case "GET":
-		site := models.QuerySite()
-		err := tmpls.Settings.Execute(w, struct {
-			Site      models.Site
-			Paths     PathDefs
-			CsrfToken string
-		}{
-			Site:      *site,
-			Paths:     Paths,
-			CsrfToken: csrfToken,
-		})
-		if err != nil {
-			log.Fatal(err)
-		}
+		site = models.QuerySite()
 	case "POST":
+		title := r.FormValue("title")
+		tagline := r.FormValue("tagline")
+		models.SaveSettings(title, tagline)
+		site = &models.Site{Title: title, Tagline: tagline}
+		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
+	}
+
+	err := tmpls.Settings.Execute(w, struct {
+		Site      models.Site
+		Paths     PathDefs
+		CsrfToken string
+		Msg       string
+	}{
+		Site:      *site,
+		Paths:     Paths,
+		CsrfToken: csrfToken,
+		Msg:       msg,
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
 }

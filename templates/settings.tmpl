@@ -1,4 +1,4 @@
-{{define "title"}}Create new Post{{end}}
+{{define "title"}}Settings{{end}}
 
 {{define "body"}}
 <h1>Settings</h1>
@@ -6,17 +6,21 @@
 <form action="{{.Paths.Settings}}" method="post">
   <label for="title">
     Site title:<br />
-    <input type="text" name="title" id="title" value="{{.Site.Title}}" />
+    <input type="text" name="title" id="title" value="{{.Site.Title}}" required />
   </label>
 
   <label for="tagline">
     Tagline:<br />
-    <input type="text" name="tagline" id="tagline" value="{{.Site.Tagline}}" />
+    <input type="text" name="tagline" id="tagline" value="{{.Site.Tagline}}" required />
   </label>
 
-  <input type="submit" value="Save" />
-  <input type="hidden" name="csrf" value="{{.CsrfToken}}" />
+    <input type="hidden" name="csrf" value="{{.CsrfToken}}" />
+  <div>
+    <input type="submit" value="Save" />
+    <span id="msg">{{.Msg}}</span>
+  </div>
 </form>
+
 
 <style>
   form {
@@ -24,9 +28,25 @@
     flex-direction: column;
     gap: 1rem;
   }
-  input,
+  input[type="text"],
   textarea {
     width: 100%;
+  }
+
+  @keyframes pulse {
+    0% {
+      background-color: beige;
+      color: inherit;
+    }
+    100% {
+      background-color: transparent;
+      color: #aaa;
+    }
+  }
+  #msg {
+    color: #aaa;
+    padding: 0.3rem;
+    animation: .5s ease-out 0s 1 pulse;
   }
 </style>
 {{end}}
