@@ -14,10 +14,11 @@
     <input type="text" name="tagline" id="tagline" value="{{.Site.Tagline}}" required />
   </label>
 
-    <input type="hidden" name="csrf" value="{{.CsrfToken}}" />
+  {{.CsrfTag}}
+
   <div>
     <input type="submit" value="Save" />
-    <span id="msg">{{.Msg}}</span>
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
   </div>
 </form>
 

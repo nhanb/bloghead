@@ -3,21 +3,24 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 )
 
 const csrfCookieName = "csrf"
+const csrfInputName = "csrf-token"
 
 // CsrfCheck performs a [Double Submit Cookie] check against CSRF.
 //
-// On success it sets an appropriate cookie and returns the csrf token for
-// caller to include in its, say, POST form.
+// On success, it returns html markup for a hidden <input> tag,
+// ready to be put inside a <form>.
 //
 // On failure, it writes a 403 response and returns "".
 //
 // [Double Submit Cookie]: https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie
-func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken string) {
+func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken template.HTML) {
 	csrfCookie, err := r.Cookie(csrfCookieName)
 	if err == http.ErrNoCookie {
 		// If previous csrf cookie expired or this is the first request,
@@ -35,7 +38,7 @@ func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken string) {
 	} else if r.Method == "POST" {
 		// All POST requests must provide a hidden form input that matches
 		// the csrf token from cookie.
-		csrfTokenFromForm := r.FormValue("csrf")
+		csrfTokenFromForm := r.FormValue(csrfInputName)
 		if csrfTokenFromForm == "" || csrfTokenFromForm != csrfCookie.Value {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("Failed CSRF token check."))
@@ -43,7 +46,10 @@ func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken string) {
 		}
 	}
 
-	return csrfCookie.Value
+	return template.HTML(fmt.Sprintf(
+		`<input type="hidden" name="%s" value="%s" />`,
+		csrfInputName, csrfCookie.Value,
+	))
 }
 
 // Does what it says on the tin.

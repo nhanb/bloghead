@@ -108,8 +108,8 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func settingsHandler(w http.ResponseWriter, r *http.Request) {
-	csrfToken := CsrfCheck(w, r)
-	if csrfToken == "" {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
 		return
 	}
 
@@ -128,15 +128,15 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := tmpls.Settings.Execute(w, struct {
-		Site      models.Site
-		Paths     PathDefs
-		CsrfToken string
-		Msg       string
+		Site    models.Site
+		Paths   PathDefs
+		CsrfTag template.HTML
+		Msg     string
 	}{
-		Site:      *site,
-		Paths:     Paths,
-		CsrfToken: csrfToken,
-		Msg:       msg,
+		Site:    *site,
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Msg:     msg,
 	})
 	if err != nil {
 		log.Fatal(err)
