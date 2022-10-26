@@ -24,7 +24,7 @@ type PathDefs struct {
 
 var Paths = PathDefs{
 	Home:     "/",
-	Preview:  "/www",
+	Preview:  "/www/",
 	Settings: "/settings",
 	NewPost:  "/new",
 }
@@ -78,6 +78,7 @@ func main() {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != Paths.Home {
 		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(r.URL.Path))
 		w.Write([]byte("404 Not Fun :("))
 		return
 	}
@@ -101,7 +102,28 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newPostHandler(w http.ResponseWriter, r *http.Request) {
-	err := tmpls.NewPost.Execute(w, struct{ Paths PathDefs }{Paths: Paths})
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	if r.Method == "POST" {
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+		slug := r.FormValue("slug")
+		fmt.Println("Creating!")
+		models.CreateNewPost(title, slug, content)
+		http.Redirect(w, r, Paths.Home, http.StatusSeeOther)
+		return
+	}
+
+	err := tmpls.NewPost.Execute(w, struct {
+		Paths   PathDefs
+		CsrfTag template.HTML
+	}{
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}

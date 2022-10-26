@@ -13,14 +13,15 @@ insert into site(id) values(0);
 -- Post
 create table post (
     id integer primary key,
-    path text unique not null,
+    slug text unique check (slug regexp '^[a-zA-Z0-9-._]+$') not null,
     title text not null,
     content text not null,
     created_at text default (datetime('now')),
     updated_at text default null
 );
-insert into post(path, title, content) values
-    ('1st', 'Hello World', 'I am your first post.'),
+insert into post(slug, title, content) values
+    ('1st.in.the.biz', 'Hello World', 'I am your first post.'),
     ('the-second', 'Second coming?', 'I''m second.'),
-    ('the/third', 'Third!!', 'Third time''s the charm.')
+    ('ThirdTimesTheCharm', 'Third!!', 'Third time''s the charm.'),
+    ('4th_for_good_luck', 'Fourth.', 'Meh.')
 ;

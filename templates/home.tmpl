@@ -7,7 +7,7 @@
 <ul>
     <li><a href="{{.Paths.NewPost}}">New post</a></li>
     {{range .Posts}}
-    <li><code>{{.Path}}</code> - <b>{{.Title}}</b> - {{.Content}}</li>
+    <li><code>{{.Slug}}</code> - <b>{{.Title}}</b> - {{.Content}}</li>
     {{end}}
 </ul>
 
