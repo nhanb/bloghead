@@ -6,19 +6,23 @@
 <form action="{{.Paths.NewPost}}" method="post">
   <label for="title">
     Title:<br />
-    <input type="text" name="title" id="title" />
+    <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
   </label>
   <label for="slug">
     Slug (only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed):<br />
-    <input type="text" name="slug" id="slug" />
+    <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
+           />
   </label>
   <label for="content">
     Content:<br />
-    <textarea id="content" name="content" cols="30" rows="10"></textarea>
+    <textarea id="content" name="content" cols="30" rows="10" required>{{.Post.Content}}</textarea>
   </label>
+
   {{.CsrfTag}}
+
   <div>
     <input type="submit" value="Create new post" />
+    {{if .Msg}}<span id="err-msg">Error: {{.Msg}}</span>{{end}}
   </div>
 </form>
 {{end}}

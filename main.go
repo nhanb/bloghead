@@ -20,6 +20,11 @@ type PathDefs struct {
 	Preview  string
 	Settings string
 	NewPost  string
+	EditPost string
+}
+
+func (p *PathDefs) EditPostWithId(id int64) string {
+	return fmt.Sprintf("%s/%d", p.EditPost, id)
 }
 
 var Paths = PathDefs{
@@ -27,6 +32,7 @@ var Paths = PathDefs{
 	Preview:  "/www/",
 	Settings: "/settings",
 	NewPost:  "/new",
+	EditPost: "/edit",
 }
 
 //go:embed templates
@@ -78,8 +84,8 @@ func main() {
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != Paths.Home {
 		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 Not Fun :(\n"))
 		w.Write([]byte(r.URL.Path))
-		w.Write([]byte("404 Not Fun :("))
 		return
 	}
 	site := models.QuerySite()
@@ -107,22 +113,31 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var msg string
+	var post models.Post
+
 	if r.Method == "POST" {
-		title := r.FormValue("title")
-		content := r.FormValue("content")
-		slug := r.FormValue("slug")
-		fmt.Println("Creating!")
-		models.CreateNewPost(title, slug, content)
-		http.Redirect(w, r, Paths.Home, http.StatusSeeOther)
-		return
+		post.Title = r.FormValue("title")
+		post.Content = r.FormValue("content")
+		post.Slug = r.FormValue("slug")
+		err := models.CreateNewPost(&post)
+		if err == nil {
+			http.Redirect(w, r, Paths.EditPostWithId(post.Id), http.StatusSeeOther)
+			return
+		}
+		msg = err.Error()
 	}
 
 	err := tmpls.NewPost.Execute(w, struct {
 		Paths   PathDefs
 		CsrfTag template.HTML
+		Msg     string
+		Post    models.Post
 	}{
 		Paths:   Paths,
 		CsrfTag: csrfTag,
+		Msg:     msg,
+		Post:    post,
 	})
 	if err != nil {
 		log.Fatal(err)

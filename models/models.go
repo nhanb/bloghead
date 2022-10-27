@@ -2,9 +2,11 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
@@ -82,10 +84,30 @@ func SaveSettings(title string, tagline string) {
 	db.Exec("update site set title=?, tagline=?;", title, tagline)
 }
 
-func CreateNewPost(title string, slug string, content string) {
+func CreateNewPost(p *Post) error {
+	if p.Id != 0 {
+		log.Fatalf("Calling CreateNewPost on existing Post: id=%d\n", p.Id)
+	}
+
 	result, err := db.Exec(
-		"insert into post (title, slug, content) values (?, ?, ?);",
-		title, slug, content,
+		"insert into post (title, slug, content) values (?,?,?);",
+		p.Title, p.Slug, p.Content,
 	)
-	fmt.Printf("%v\n%v", result, err)
+	if err != nil {
+		errno := err.(sqlite3.Error).ExtendedCode
+		errmsg := err.Error()
+
+		if errno == sqlite3.ErrConstraintUnique && strings.Contains(errmsg, "post.slug") {
+			return errors.New(fmt.Sprintf(`Slug "%s" already exists.`, p.Slug))
+		}
+		if errno == sqlite3.ErrConstraintCheck && strings.Contains(errmsg, "slug") {
+			return errors.New(fmt.Sprintf(`Slug "%s" has invalid format.`, p.Slug))
+		}
+		return err
+	}
+
+	p.Id, _ = result.LastInsertId()
+	// mattn/go-sqlite3's LastInsertId() always returns a nil err:
+	// https://github.com/mattn/go-sqlite3/blob/4ef63c9c0db77925ab91b95237f9e3802c4710a4/sqlite3.go#L2013-L2016
+	return nil
 }

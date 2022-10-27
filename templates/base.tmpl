@@ -54,15 +54,18 @@
       @keyframes pulse {
         0% {
           background-color: beige;
-          color: inherit;
         }
         100% {
           background-color: transparent;
-          color: #aaa;
         }
       }
       #msg {
         color: #aaa;
+        padding: 0.3rem;
+        animation: .5s ease-out 0s 1 pulse;
+      }
+      #err-msg {
+        color: red;
         padding: 0.3rem;
         animation: .5s ease-out 0s 1 pulse;
       }
