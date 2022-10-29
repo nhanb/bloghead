@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"time"
@@ -131,7 +132,13 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.Slug = r.FormValue("slug")
 		err := post.Create()
 		if err == nil {
-			http.Redirect(w, r, Paths.EditPostWithId(post.Id), http.StatusSeeOther)
+			http.Redirect(
+				w, r,
+				Paths.EditPostWithId(post.Id)+"?msg="+url.QueryEscape(
+					fmt.Sprintf("Successfully created post #%d", post.Id),
+				),
+				http.StatusSeeOther,
+			)
 			return
 		}
 		errMsg = err.Error()
@@ -193,6 +200,9 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			errMsg = err.Error()
 		}
+
+	} else if r.Method == "GET" {
+		msg = r.URL.Query().Get("msg")
 	}
 
 	err = tmpls.NewPost.Execute(w, struct {
