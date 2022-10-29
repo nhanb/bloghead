@@ -19,9 +19,3 @@ create table post (
     created_at text default (datetime('now')),
     updated_at text default null
 );
-insert into post(slug, title, content) values
-    ('1st.in.the.biz', 'Hello World', 'I am your first post.'),
-    ('the-second', 'Second coming?', 'I''m second.'),
-    ('ThirdTimesTheCharm', 'Third!!', 'Third time''s the charm.'),
-    ('4th_for_good_luck', 'Fourth.', 'Meh.')
-;

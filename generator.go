@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 
+	"go.imnhan.com/bloghead/djot"
 	"go.imnhan.com/bloghead/models"
 )
 
@@ -35,6 +36,11 @@ func GenerateSite(outdir string) {
 	site := models.QuerySite()
 	posts := models.QueryPosts()
 
+	err := os.MkdirAll(outdir, 0750)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	generateHome(outdir, site, posts)
 
 	for _, p := range posts {
@@ -52,12 +58,10 @@ func generateHome(outdir string, site *models.Site, posts []models.Post) {
 		struct {
 			Site  *models.Site
 			Posts []models.Post
-			Paths PathDefs
 			Title string
 		}{
 			Site:  site,
 			Posts: posts,
-			Paths: Paths,
 		},
 	)
 	if err != nil {
@@ -78,15 +82,13 @@ func generatePost(outdir string, site *models.Site, p *models.Post) {
 
 	err = outTmpls.Post.Execute(w,
 		struct {
-			Site  *models.Site
-			Post  *models.Post
-			Paths PathDefs
-			Title string
+			Site        *models.Site
+			Title       string
+			HtmlContent template.HTML
 		}{
-			Site:  site,
-			Post:  p,
-			Paths: Paths,
-			Title: p.Title,
+			Site:        site,
+			Title:       p.Title,
+			HtmlContent: djot.ToHtml(p.Content),
 		},
 	)
 	if err != nil {

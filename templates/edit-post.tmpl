@@ -9,13 +9,21 @@
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
   </label>
   <label for="slug">
-    Slug (only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed):<br />
+    Slug:<br />
+    <span style="color:grey;">
+        only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed
+    </span><br />
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
            />
   </label>
   <label for="content">
     Content:<br />
-    <textarea id="content" name="content" cols="30" rows="10" required>{{.Post.Content}}</textarea>
+    <span style="color:grey;">
+    we use <a href="https://djot.net/">djot</a> syntax which is more
+    well-defined Markdown variant - here's a
+    <a href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
+    </span><br />
+    <textarea id="content" name="content" cols="30" rows="20" required>{{.Post.Content}}</textarea>
   </label>
 
   {{.CsrfTag}}

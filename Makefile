@@ -1,4 +1,4 @@
-.PHONY : run watch init-db clean
+.PHONY : build run watch init-db clean
 
 build:
 	go build
@@ -11,7 +11,8 @@ watch:
 
 init-db:
 	rm -f Site1.bloghead
-	sqlite3 Site1.bloghead < initdb.sql
+	sqlite3 Site1.bloghead < schema.sql
+	go run ./cmd/seed
 
 clean:
 	rm -rf www Site1.bloghead bloghead
