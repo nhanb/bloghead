@@ -1,0 +1,9 @@
+{{define "body"}}
+<p>All posts, newest first:</p>
+
+<ul>
+    {{range .Posts}}
+    <li><a href="{{.Slug}}">{{.Title}}</a></li>
+    {{end}}
+</ul>
+{{end}}

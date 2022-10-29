@@ -48,33 +48,31 @@ type Templates struct {
 	EditPost *template.Template
 }
 
-var tmpls Templates
+var tmpls = Templates{
+	Home: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/home.tmpl",
+	)),
+	Settings: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/settings.tmpl",
+	)),
+	NewPost: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/edit-post.tmpl",
+	)),
+	EditPost: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/edit-post.tmpl",
+	)),
+}
 
 func main() {
 	models.Init(Dbfile)
-
-	tmpls = Templates{
-		Home: template.Must(template.ParseFS(
-			tmplsFS,
-			"templates/base.tmpl",
-			"templates/home.tmpl",
-		)),
-		Settings: template.Must(template.ParseFS(
-			tmplsFS,
-			"templates/base.tmpl",
-			"templates/settings.tmpl",
-		)),
-		NewPost: template.Must(template.ParseFS(
-			tmplsFS,
-			"templates/base.tmpl",
-			"templates/edit-post.tmpl",
-		)),
-		EditPost: template.Must(template.ParseFS(
-			tmplsFS,
-			"templates/base.tmpl",
-			"templates/edit-post.tmpl",
-		)),
-	}
 
 	GenerateSite(Outdir)
 
