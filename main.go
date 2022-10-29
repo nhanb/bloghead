@@ -120,7 +120,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.Title = r.FormValue("title")
 		post.Content = r.FormValue("content")
 		post.Slug = r.FormValue("slug")
-		err := models.CreateNewPost(&post)
+		err := post.Create()
 		if err == nil {
 			http.Redirect(w, r, Paths.EditPostWithId(post.Id), http.StatusSeeOther)
 			return
@@ -157,10 +157,11 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		site = models.QuerySite()
 	case "POST":
-		title := r.FormValue("title")
-		tagline := r.FormValue("tagline")
-		models.SaveSettings(title, tagline)
-		site = &models.Site{Title: title, Tagline: tagline}
+		site = &models.Site{
+			Title:   r.FormValue("title"),
+			Tagline: r.FormValue("tagline"),
+		}
+		site.Save()
 		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
 	}
 

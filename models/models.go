@@ -80,13 +80,13 @@ func QuerySite() *Site {
 	return &s
 }
 
-func SaveSettings(title string, tagline string) {
-	db.Exec("update site set title=?, tagline=?;", title, tagline)
+func (s *Site) Save() {
+	db.Exec("update site set title=?, tagline=?;", s.Title, s.Tagline)
 }
 
-func CreateNewPost(p *Post) error {
+func (p *Post) Create() error {
 	if p.Id != 0 {
-		log.Fatalf("Calling CreateNewPost on existing Post: id=%d\n", p.Id)
+		log.Fatalf("Calling Create() on existing Post: id=%d\n", p.Id)
 	}
 
 	result, err := db.Exec(
