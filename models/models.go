@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
@@ -108,7 +107,7 @@ func (p *Post) Create() error {
 		p.Title, p.Slug, p.Content,
 	)
 	if err != nil {
-		return processPostError(err, p)
+		return processPostError(err)
 	}
 
 	p.Id, _ = result.LastInsertId()
@@ -126,20 +125,38 @@ func (p *Post) Update() error {
 		p.Title, p.Slug, p.Content, p.Id,
 	)
 	if err != nil {
-		return processPostError(err, p)
+		return processPostError(err)
 	}
 	return nil
 }
 
-func processPostError(err error, p *Post) error {
+var uniquenessErrMsg = regexp.MustCompile(
+	`^UNIQUE constraint failed: [a-z]+\.([a-z]+)$`,
+)
+var regexpErrMsg = regexp.MustCompile(
+	`^CHECK constraint failed: ([a-z]+) regexp .+$`,
+)
+
+// Turns sqlite3 errors into user-friendly error messages.
+// Returns the error as-is if not recognized.
+func processPostError(err error) error {
 	errno := err.(sqlite3.Error).ExtendedCode
 	errmsg := err.Error()
 
-	if errno == sqlite3.ErrConstraintUnique && strings.Contains(errmsg, "post.slug") {
-		return errors.New(fmt.Sprintf(`Slug "%s" already exists.`, p.Slug))
+	switch errno {
+	case sqlite3.ErrConstraintUnique:
+		match := uniquenessErrMsg.FindStringSubmatch(errmsg)
+		if len(match) > 0 {
+			column := match[1]
+			return errors.New(fmt.Sprintf(`%s already exists.`, column))
+		}
+	case sqlite3.ErrConstraintCheck:
+		match := regexpErrMsg.FindStringSubmatch(errmsg)
+		if len(match) > 0 {
+			column := match[1]
+			return errors.New(fmt.Sprintf(`%s has invalid format.`, column))
+		}
 	}
-	if errno == sqlite3.ErrConstraintCheck && strings.Contains(errmsg, "slug") {
-		return errors.New(fmt.Sprintf(`Slug "%s" has invalid format.`, p.Slug))
-	}
+
 	return err
 }
