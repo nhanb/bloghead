@@ -6,6 +6,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 
 	"go.imnhan.com/bloghead/models"
@@ -32,7 +34,7 @@ var Paths = PathDefs{
 	Preview:  "/www/",
 	Settings: "/settings",
 	NewPost:  "/new",
-	EditPost: "/edit",
+	EditPost: "/edit/",
 }
 
 //go:embed templates
@@ -42,6 +44,7 @@ type Templates struct {
 	Home     *template.Template
 	Settings *template.Template
 	NewPost  *template.Template
+	EditPost *template.Template
 }
 
 var tmpls Templates
@@ -63,7 +66,12 @@ func main() {
 		NewPost: template.Must(template.ParseFS(
 			tmplsFS,
 			"templates/base.tmpl",
-			"templates/new-post.tmpl",
+			"templates/edit-post.tmpl",
+		)),
+		EditPost: template.Must(template.ParseFS(
+			tmplsFS,
+			"templates/base.tmpl",
+			"templates/edit-post.tmpl",
 		)),
 	}
 
@@ -72,6 +80,7 @@ func main() {
 	http.HandleFunc(Paths.Home, homeHandler)
 	http.HandleFunc(Paths.Settings, settingsHandler)
 	http.HandleFunc(Paths.NewPost, newPostHandler)
+	http.HandleFunc(Paths.EditPost, editPostHandler)
 	http.Handle(
 		Paths.Preview,
 		http.StripPrefix(Paths.Preview, http.FileServer(http.Dir(Outdir))),
@@ -113,7 +122,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var msg string
+	var errMsg string
 	var post models.Post
 
 	if r.Method == "POST" {
@@ -125,19 +134,85 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, Paths.EditPostWithId(post.Id), http.StatusSeeOther)
 			return
 		}
-		msg = err.Error()
+		errMsg = err.Error()
 	}
 
 	err := tmpls.NewPost.Execute(w, struct {
-		Paths   PathDefs
-		CsrfTag template.HTML
-		Msg     string
-		Post    models.Post
+		Paths      PathDefs
+		CsrfTag    template.HTML
+		Msg        string
+		ErrMsg     string
+		Post       models.Post
+		Title      string
+		SubmitText string
+		ActionPath string
 	}{
-		Paths:   Paths,
-		CsrfTag: csrfTag,
-		Msg:     msg,
-		Post:    post,
+		Paths:      Paths,
+		CsrfTag:    csrfTag,
+		Msg:        "",
+		ErrMsg:     errMsg,
+		Post:       post,
+		Title:      "New post",
+		SubmitText: "Create",
+		ActionPath: Paths.NewPost,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+func editPostHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	validPath := regexp.MustCompile("^" + Paths.EditPost + `([0-9]+)$`)
+	match := validPath.FindStringSubmatch(r.URL.Path)
+	if len(match) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	postId, _ := strconv.ParseInt(match[1], 10, 64)
+
+	post, err := models.QueryPost(postId)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(err.Error()))
+		return
+	}
+
+	var msg, errMsg string
+
+	if r.Method == "POST" {
+		post.Title = r.FormValue("title")
+		post.Content = r.FormValue("content")
+		post.Slug = r.FormValue("slug")
+		err := post.Update()
+		if err == nil {
+			msg = fmt.Sprintf("Updated at %s", time.Now().Format("3:04:05 PM"))
+		} else {
+			errMsg = err.Error()
+		}
+	}
+
+	err = tmpls.NewPost.Execute(w, struct {
+		Paths      PathDefs
+		CsrfTag    template.HTML
+		Msg        string
+		ErrMsg     string
+		Post       models.Post
+		Title      string
+		SubmitText string
+		ActionPath string
+	}{
+		Paths:      Paths,
+		CsrfTag:    csrfTag,
+		Msg:        msg,
+		ErrMsg:     errMsg,
+		Post:       *post,
+		Title:      fmt.Sprintf("Editing post #%d", post.Id),
+		SubmitText: "Update",
+		ActionPath: r.URL.Path,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -161,7 +236,7 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 			Title:   r.FormValue("title"),
 			Tagline: r.FormValue("tagline"),
 		}
-		site.Save()
+		site.Update()
 		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
 	}
 

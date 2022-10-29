@@ -1,9 +1,9 @@
-{{define "title"}}New post{{end}}
+{{define "title"}}{{.Title}}{{end}}
 
 {{define "body"}}
-<h1>New post</h1>
+<h1>{{.Title}}</h1>
 
-<form action="{{.Paths.NewPost}}" method="post">
+<form action="{{.ActionPath}}" method="post">
   <label for="title">
     Title:<br />
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
@@ -21,8 +21,9 @@
   {{.CsrfTag}}
 
   <div>
-    <input type="submit" value="Create new post" />
-    {{if .Msg}}<span id="err-msg">Error: {{.Msg}}</span>{{end}}
+    <input type="submit" value="{{.SubmitText}}" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
 </form>
 {{end}}

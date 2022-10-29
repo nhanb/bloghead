@@ -70,6 +70,21 @@ func QueryPosts() (posts []Post) {
 	return posts
 }
 
+func QueryPost(id int64) (*Post, error) {
+	p := Post{Id: id}
+	rows, err := db.Query("select slug, title, content from post where id=?;", id)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	found := rows.Next()
+	if !found {
+		return nil, errors.New(fmt.Sprintf("Post id=%d not found.", id))
+	}
+	rows.Scan(&p.Slug, &p.Title, &p.Content)
+	return &p, nil
+}
+
 func QuerySite() *Site {
 	var s Site
 	row := db.QueryRow("select title, tagline from site;")
@@ -80,7 +95,7 @@ func QuerySite() *Site {
 	return &s
 }
 
-func (s *Site) Save() {
+func (s *Site) Update() {
 	db.Exec("update site set title=?, tagline=?;", s.Title, s.Tagline)
 }
 
@@ -88,26 +103,43 @@ func (p *Post) Create() error {
 	if p.Id != 0 {
 		log.Fatalf("Calling Create() on existing Post: id=%d\n", p.Id)
 	}
-
 	result, err := db.Exec(
 		"insert into post (title, slug, content) values (?,?,?);",
 		p.Title, p.Slug, p.Content,
 	)
 	if err != nil {
-		errno := err.(sqlite3.Error).ExtendedCode
-		errmsg := err.Error()
-
-		if errno == sqlite3.ErrConstraintUnique && strings.Contains(errmsg, "post.slug") {
-			return errors.New(fmt.Sprintf(`Slug "%s" already exists.`, p.Slug))
-		}
-		if errno == sqlite3.ErrConstraintCheck && strings.Contains(errmsg, "slug") {
-			return errors.New(fmt.Sprintf(`Slug "%s" has invalid format.`, p.Slug))
-		}
-		return err
+		return processPostError(err, p)
 	}
 
 	p.Id, _ = result.LastInsertId()
 	// mattn/go-sqlite3's LastInsertId() always returns a nil err:
 	// https://github.com/mattn/go-sqlite3/blob/4ef63c9c0db77925ab91b95237f9e3802c4710a4/sqlite3.go#L2013-L2016
 	return nil
+}
+
+func (p *Post) Update() error {
+	if p.Id == 0 {
+		log.Fatalln("Calling Update() on new Post (id=0).")
+	}
+	_, err := db.Exec(
+		"update post set title=?, slug=?, content=? where id=?;",
+		p.Title, p.Slug, p.Content, p.Id,
+	)
+	if err != nil {
+		return processPostError(err, p)
+	}
+	return nil
+}
+
+func processPostError(err error, p *Post) error {
+	errno := err.(sqlite3.Error).ExtendedCode
+	errmsg := err.Error()
+
+	if errno == sqlite3.ErrConstraintUnique && strings.Contains(errmsg, "post.slug") {
+		return errors.New(fmt.Sprintf(`Slug "%s" already exists.`, p.Slug))
+	}
+	if errno == sqlite3.ErrConstraintCheck && strings.Contains(errmsg, "slug") {
+		return errors.New(fmt.Sprintf(`Slug "%s" has invalid format.`, p.Slug))
+	}
+	return err
 }

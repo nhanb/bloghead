@@ -4,10 +4,13 @@
 <h1>{{.Site.Title}}</h1>
 <p>{{.Site.Tagline}}</p>
 
+<p><a href="{{.Paths.NewPost}}">+ Create new post</a></p>
+
+<p>All posts:</p>
+
 <ul>
-    <li><a href="{{.Paths.NewPost}}">New post</a></li>
     {{range .Posts}}
-    <li><code>{{.Slug}}</code> - <b>{{.Title}}</b> - {{.Content}}</li>
+    <li><a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
     {{end}}
 </ul>
 
