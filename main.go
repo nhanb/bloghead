@@ -15,7 +15,8 @@ import (
 )
 
 const Dbfile = "Site1.bloghead"
-const Port = 8000
+const EditorPort = 8000
+const PreviewPort = 8001
 const Outdir = "www"
 
 type PathDefs struct {
@@ -24,6 +25,7 @@ type PathDefs struct {
 	Settings string
 	NewPost  string
 	EditPost string
+	Output   string
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -36,6 +38,7 @@ var Paths = PathDefs{
 	Settings: "/settings",
 	NewPost:  "/new",
 	EditPost: "/edit/",
+	Output:   "/output/",
 }
 
 //go:embed templates
@@ -74,19 +77,26 @@ var tmpls = Templates{
 func main() {
 	models.Init(Dbfile)
 
-	GenerateSite(Outdir)
-
-	http.HandleFunc(Paths.Home, homeHandler)
-	http.HandleFunc(Paths.Settings, settingsHandler)
-	http.HandleFunc(Paths.NewPost, newPostHandler)
-	http.HandleFunc(Paths.EditPost, editPostHandler)
-	http.Handle(
+	editorServer := http.NewServeMux()
+	editorServer.HandleFunc(Paths.Home, homeHandler)
+	editorServer.HandleFunc(Paths.Settings, settingsHandler)
+	editorServer.HandleFunc(Paths.NewPost, newPostHandler)
+	editorServer.HandleFunc(Paths.EditPost, editPostHandler)
+	editorServer.Handle(
 		Paths.Preview,
 		http.StripPrefix(Paths.Preview, http.FileServer(http.Dir(Outdir))),
 	)
 
-	fmt.Printf("Listening on port %d\n", Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Port), nil))
+	previewServer := http.NewServeMux()
+	previewServer.Handle("/", http.FileServer(http.FS(&BlogFS{})))
+
+	go func() {
+		fmt.Printf("Preview server on port %d\n", PreviewPort)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PreviewPort), previewServer))
+	}()
+
+	fmt.Printf("Editor server on port %d\n", EditorPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), editorServer))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {

@@ -69,6 +69,27 @@ func QueryPosts() (posts []Post) {
 	return posts
 }
 
+func QueryPostSlugs() (names []string) {
+	rows, err := db.Query("select slug from post order by slug;")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var slugs []string
+	for rows.Next() {
+		var slug string
+		err = rows.Scan(&slug)
+		slugs = append(slugs, slug)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return slugs
+}
+
 func QueryPost(id int64) (*Post, error) {
 	p := Post{Id: id}
 	rows, err := db.Query("select slug, title, content from post where id=?;", id)
@@ -81,6 +102,21 @@ func QueryPost(id int64) (*Post, error) {
 		return nil, errors.New(fmt.Sprintf("Post id=%d not found.", id))
 	}
 	rows.Scan(&p.Slug, &p.Title, &p.Content)
+	return &p, nil
+}
+
+func GetPostBySlug(slug string) (*Post, error) {
+	p := Post{Slug: slug}
+	rows, err := db.Query("select id, title, content from post where slug=?;", slug)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	found := rows.Next()
+	if !found {
+		return nil, errors.New(fmt.Sprintf(`Post slug="%s" not found.`, slug))
+	}
+	rows.Scan(&p.Id, &p.Title, &p.Content)
 	return &p, nil
 }
 
