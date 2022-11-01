@@ -11,21 +11,20 @@ import (
 	"strconv"
 	"time"
 
+	"go.imnhan.com/bloghead/blogfs"
 	"go.imnhan.com/bloghead/models"
 )
 
 const Dbfile = "Site1.bloghead"
 const EditorPort = 8000
 const PreviewPort = 8001
-const Outdir = "www"
 
 type PathDefs struct {
 	Home     string
-	Preview  string
 	Settings string
 	NewPost  string
 	EditPost string
-	Output   string
+	Preview  string
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -34,11 +33,10 @@ func (p *PathDefs) EditPostWithId(id int64) string {
 
 var Paths = PathDefs{
 	Home:     "/",
-	Preview:  "/www/",
 	Settings: "/settings",
 	NewPost:  "/new",
 	EditPost: "/edit/",
-	Output:   "/output/",
+	Preview:  "/preview/",
 }
 
 //go:embed templates
@@ -77,26 +75,21 @@ var tmpls = Templates{
 func main() {
 	models.Init(Dbfile)
 
-	editorServer := http.NewServeMux()
-	editorServer.HandleFunc(Paths.Home, homeHandler)
-	editorServer.HandleFunc(Paths.Settings, settingsHandler)
-	editorServer.HandleFunc(Paths.NewPost, newPostHandler)
-	editorServer.HandleFunc(Paths.EditPost, editPostHandler)
-	editorServer.Handle(
+	mux := http.NewServeMux()
+	mux.HandleFunc(Paths.Home, homeHandler)
+	mux.HandleFunc(Paths.Settings, settingsHandler)
+	mux.HandleFunc(Paths.NewPost, newPostHandler)
+	mux.HandleFunc(Paths.EditPost, editPostHandler)
+	mux.Handle(
 		Paths.Preview,
-		http.StripPrefix(Paths.Preview, http.FileServer(http.Dir(Outdir))),
+		http.StripPrefix(
+			Paths.Preview,
+			http.FileServer(http.FS(&blogfs.BlogFS{})),
+		),
 	)
 
-	previewServer := http.NewServeMux()
-	previewServer.Handle("/", http.FileServer(http.FS(&BlogFS{})))
-
-	go func() {
-		fmt.Printf("Preview server on port %d\n", PreviewPort)
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", PreviewPort), previewServer))
-	}()
-
-	fmt.Printf("Editor server on port %d\n", EditorPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), editorServer))
+	fmt.Printf("Editor server listening on port %d\n", EditorPort)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), mux))
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,8 @@
-package main
+package blogfs
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"html/template"
 	"io"
@@ -15,9 +16,30 @@ import (
 )
 
 var _ fs.FS = (*BlogFS)(nil)
-var _ fs.File = (*BlogFile)(nil)
-var _ fs.FileInfo = (*BlogFile)(nil)
-var _ fs.DirEntry = (*BlogFile)(nil)
+var _ fs.File = (*blogFile)(nil)
+var _ fs.FileInfo = (*blogFile)(nil)
+var _ fs.DirEntry = (*blogFile)(nil)
+
+//go:embed blog-templates
+var outTmplsFS embed.FS
+
+type OutputTemplates struct {
+	Home *template.Template
+	Post *template.Template
+}
+
+var outTmpls = OutputTemplates{
+	Home: template.Must(template.ParseFS(
+		outTmplsFS,
+		"blog-templates/base.tmpl",
+		"blog-templates/home.tmpl",
+	)),
+	Post: template.Must(template.ParseFS(
+		outTmplsFS,
+		"blog-templates/base.tmpl",
+		"blog-templates/post.tmpl",
+	)),
+}
 
 type BlogFS struct{}
 
@@ -26,7 +48,7 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 	println("Open:", name)
 
 	if name == "." {
-		return &BlogFile{isDir: true}, nil
+		return &blogFile{isDir: true}, nil
 	}
 
 	if name == "index.html" {
@@ -43,7 +65,7 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 
 	_, err := models.GetPostBySlug(name)
 	if err == nil {
-		return &BlogFile{isDir: true}, nil
+		return &blogFile{isDir: true}, nil
 	}
 
 	return nil, fs.ErrNotExist
@@ -64,7 +86,7 @@ func homeFile(posts []models.Post, site *models.Site) fs.File {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &BlogFile{
+	return &blogFile{
 		name:    "index.html",
 		content: buf.Bytes(),
 	}
@@ -87,24 +109,24 @@ func postFile(p *models.Post, site *models.Site) fs.File {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &BlogFile{
+	return &blogFile{
 		name:    "index.html",
 		content: buf.Bytes(),
 	}
 }
 
-type BlogFile struct {
+type blogFile struct {
 	name    string
 	content []byte
 	offset  int64
 	isDir   bool
 }
 
-func (f *BlogFile) Stat() (fs.FileInfo, error) {
+func (f *blogFile) Stat() (fs.FileInfo, error) {
 	return f, nil
 }
 
-func (bf *BlogFile) Read(buf []byte) (int, error) {
+func (bf *blogFile) Read(buf []byte) (int, error) {
 	if bf.offset >= int64(len(bf.content)) {
 		return 0, io.EOF
 	}
@@ -113,7 +135,7 @@ func (bf *BlogFile) Read(buf []byte) (int, error) {
 	return n, nil
 }
 
-func (bf *BlogFile) Seek(offset int64, whence int) (int64, error) {
+func (bf *blogFile) Seek(offset int64, whence int) (int64, error) {
 	fmt.Printf("Seek: %v, %v\n", offset, whence)
 
 	switch whence {
@@ -129,33 +151,33 @@ func (bf *BlogFile) Seek(offset int64, whence int) (int64, error) {
 	return 0, nil
 }
 
-func (f *BlogFile) Close() error {
+func (f *blogFile) Close() error {
 	return nil
 }
-func (f *BlogFile) Info() (fs.FileInfo, error) {
+func (f *blogFile) Info() (fs.FileInfo, error) {
 	return f, nil
 }
-func (f *BlogFile) Type() fs.FileMode {
+func (f *blogFile) Type() fs.FileMode {
 	return f.Mode()
 }
-func (f *BlogFile) Name() string {
+func (f *blogFile) Name() string {
 	return f.name
 }
-func (f *BlogFile) Size() int64 {
+func (f *blogFile) Size() int64 {
 	return int64(len(f.content))
 }
-func (f *BlogFile) Mode() fs.FileMode {
+func (f *blogFile) Mode() fs.FileMode {
 	if f.isDir {
 		return fs.FileMode(0555)
 	}
 	return fs.FileMode(0444)
 }
-func (f *BlogFile) ModTime() time.Time {
+func (f *blogFile) ModTime() time.Time {
 	return time.Now() // TODO
 }
-func (f *BlogFile) IsDir() bool {
+func (f *blogFile) IsDir() bool {
 	return f.isDir
 }
-func (f *BlogFile) Sys() any {
+func (f *blogFile) Sys() any {
 	return nil
 }
