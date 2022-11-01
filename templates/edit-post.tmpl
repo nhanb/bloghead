@@ -5,23 +5,23 @@
 
 <form action="{{.ActionPath}}" method="post">
   <label for="title">
-    Title:<br />
+    <span class="label-text">Title:</span><br />
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
   </label>
   <label for="slug">
-    Slug:<br />
-    <span style="color:grey;">
+    <span class="label-text">Slug:</span><br />
+    <span style="color:grey; font-style:italic">
         only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed
     </span><br />
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
            />
   </label>
   <label for="content">
-    Content:<br />
-    <span style="color:grey;">
-    we use <a href="https://djot.net/">djot</a> syntax which is more
+    <span class="label-text">Content:</span><br />
+    <span style="color:grey; font-style:italic">
+    we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax which is a more
     well-defined Markdown variant - here's a
-    <a href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
+    <a tabindex="-1" href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
     </span><br />
     <textarea id="content" name="content" cols="30" rows="20" required>{{.Post.Content}}</textarea>
   </label>
@@ -30,7 +30,13 @@
 
   <div>
     <input type="submit" value="{{.SubmitText}}" />
-    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .Msg}}
+    <span id="msg">
+        {{.Msg}}
+        ⟶  <a href="{{.Paths.Preview}}/{{.Post.Slug}}/">preview here</a>
+    </span>
+    {{end}}
+
     {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
 </form>
