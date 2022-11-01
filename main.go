@@ -42,6 +42,9 @@ var Paths = PathDefs{
 //go:embed templates
 var tmplsFS embed.FS
 
+//go:embed favicon.ico
+var favicon []byte
+
 type Templates struct {
 	Home     *template.Template
 	Settings *template.Template
@@ -76,6 +79,7 @@ func main() {
 	models.Init(Dbfile)
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/favicon.ico", faviconHandler)
 	mux.HandleFunc(Paths.Home, homeHandler)
 	mux.HandleFunc(Paths.Settings, settingsHandler)
 	mux.HandleFunc(Paths.NewPost, newPostHandler)
@@ -90,6 +94,11 @@ func main() {
 
 	fmt.Printf("Editor server listening on port %d\n", EditorPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), mux))
+}
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write(favicon)
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
