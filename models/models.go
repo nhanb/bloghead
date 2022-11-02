@@ -47,6 +47,7 @@ type Post struct {
 	Title     string
 	Content   string
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func QueryPosts() (posts []Post) {
@@ -99,7 +100,7 @@ func QueryPostSlugs() (names []string) {
 
 func QueryPost(id int64) (*Post, error) {
 	p := Post{Id: id}
-	rows, err := db.Query("select slug, title, content, created_at from post where id=?;", id)
+	rows, err := db.Query("select slug, title, content, created_at, updated_at from post where id=?;", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -108,11 +109,20 @@ func QueryPost(id int64) (*Post, error) {
 	if !found {
 		return nil, errors.New(fmt.Sprintf("Post id=%d not found.", id))
 	}
-	var createdAt string
-	rows.Scan(&p.Slug, &p.Title, &p.Content, &createdAt)
+	var createdAt, updatedAt string
+
+	rows.Scan(&p.Slug, &p.Title, &p.Content, &createdAt, &updatedAt)
+
 	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if updatedAt != "" {
+		p.UpdatedAt, err = time.Parse("2006-01-02 15:04:05", updatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return &p, nil
 }
@@ -176,13 +186,15 @@ func (p *Post) Update() error {
 	if p.Id == 0 {
 		log.Fatalln("Calling Update() on new Post (id=0).")
 	}
+	now := time.Now()
 	_, err := db.Exec(
-		"update post set title=?, slug=?, content=? where id=?;",
-		p.Title, p.Slug, p.Content, p.Id,
+		"update post set title=?, slug=?, content=?, updated_at=? where id=?;",
+		p.Title, p.Slug, p.Content, now.Format("2006-01-02 15:04:05"), p.Id,
 	)
 	if err != nil {
 		return processPostError(err)
 	}
+	p.UpdatedAt = now
 	return nil
 }
 

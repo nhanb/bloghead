@@ -1,18 +1,28 @@
-{{define "title"}}Home{{end}}
+{{define "title"}}Posts{{end}}
 
 {{define "body"}}
-<h1>{{.Site.Title}}</h1>
-<p>{{.Site.Tagline}}</p>
+<h1>Posts</h1>
 
-<p><a href="{{.Paths.NewPost}}">+ Create new post</a></p>
+<fieldset>
+    <legend><a href="{{.Paths.NewPost}}">[+] Create new post</a></legend>
+    <ul>
+        {{range .Posts}}
+        <li>{{.CreatedAt.Format "2006-01-02"}} — <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
+        {{end}}
+    </ul>
+</fieldset>
 
-<p>All posts:</p>
+<style>
+    fieldset a {
+        text-decoration: none;
+    }
 
-<ul>
-    {{range .Posts}}
-    <li><a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
-    {{end}}
-</ul>
+    fieldset ul {
+        padding: 0;
+        list-style-type: none;
+        font-size: 1.1rem;
+    }
+</style>
 
 <p><a href="{{.Paths.Preview}}">Preview output</a></p>
 {{end}}

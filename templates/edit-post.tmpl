@@ -3,7 +3,20 @@
 {{define "body"}}
 <h1>{{.Title}}</h1>
 
+{{if .Post.Slug}}
+<a href="{{.Paths.Preview}}/{{.Post.Slug}}/">Preview live version</a>
+{{end}}
+
 <form action="{{.ActionPath}}" method="post">
+  <p style="margin:0; float:'right'; display:'block';">
+  {{if not .Post.CreatedAt.IsZero}}
+  Created: {{.Post.CreatedAt.Format "Monday 2006 Jan 2"}}<br>
+  {{end}}
+
+  {{if not .Post.UpdatedAt.IsZero}}
+  Updated: {{.Post.UpdatedAt.Format "Monday 2006 Jan 2"}}<br />
+  {{end}}
+  </p>
   <label for="title">
     <span class="label-text">Title:</span><br />
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />

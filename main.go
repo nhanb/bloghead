@@ -206,7 +206,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.Slug = r.FormValue("slug")
 		err := post.Update()
 		if err == nil {
-			msg = fmt.Sprintf("Updated at %s", time.Now().Format("3:04:05 PM"))
+			msg = fmt.Sprintf("Updated at %s", post.UpdatedAt.Format("3:04:05 PM"))
 		} else {
 			errMsg = err.Error()
 		}

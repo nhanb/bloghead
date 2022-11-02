@@ -16,6 +16,6 @@ create table post (
     slug text unique check (slug regexp '^[a-zA-Z0-9-._]+$') not null,
     title text unique not null,
     content text not null,
-    created_at text default (datetime('now')),
+    created_at text default (datetime('now', 'localtime')),
     updated_at text default null
 );
