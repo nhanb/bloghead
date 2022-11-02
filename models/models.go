@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
@@ -41,21 +42,27 @@ type Site struct {
 }
 
 type Post struct {
-	Id      int64
-	Slug    string
-	Title   string
-	Content string
+	Id        int64
+	Slug      string
+	Title     string
+	Content   string
+	CreatedAt time.Time
 }
 
 func QueryPosts() (posts []Post) {
-	rows, err := db.Query("select id, slug, title, content from post order by id desc;")
+	rows, err := db.Query("select id, slug, title, content, created_at from post order by id desc;")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Post
-		err = rows.Scan(&p.Id, &p.Slug, &p.Title, &p.Content)
+		var createdAt string
+		err = rows.Scan(&p.Id, &p.Slug, &p.Title, &p.Content, &createdAt)
+		if err != nil {
+			log.Fatal(err)
+		}
+		p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -92,7 +99,7 @@ func QueryPostSlugs() (names []string) {
 
 func QueryPost(id int64) (*Post, error) {
 	p := Post{Id: id}
-	rows, err := db.Query("select slug, title, content from post where id=?;", id)
+	rows, err := db.Query("select slug, title, content, created_at from post where id=?;", id)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,13 +108,21 @@ func QueryPost(id int64) (*Post, error) {
 	if !found {
 		return nil, errors.New(fmt.Sprintf("Post id=%d not found.", id))
 	}
-	rows.Scan(&p.Slug, &p.Title, &p.Content)
+	var createdAt string
+	rows.Scan(&p.Slug, &p.Title, &p.Content, &createdAt)
+	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &p, nil
 }
 
 func GetPostBySlug(slug string) (*Post, error) {
 	p := Post{Slug: slug}
-	rows, err := db.Query("select id, title, content from post where slug=?;", slug)
+	rows, err := db.Query(
+		"select id, title, content, created_at from post where slug=?;",
+		slug,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -116,7 +131,12 @@ func GetPostBySlug(slug string) (*Post, error) {
 	if !found {
 		return nil, errors.New(fmt.Sprintf(`Post slug="%s" not found.`, slug))
 	}
-	rows.Scan(&p.Id, &p.Title, &p.Content)
+	var createdAt string
+	rows.Scan(&p.Id, &p.Title, &p.Content, &createdAt)
+	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return &p, nil
 }
 

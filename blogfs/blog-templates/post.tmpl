@@ -1,13 +1,21 @@
 {{define "body"}}
-<h1 class="post-title">{{.Title}}</h1>
+<h1 class="post-title">{{.Post.Title}}</h1>
+<time class="post-time" datetime="{{.Post.CreatedAt.Format "2006-01-02"}}">
+    {{.Post.CreatedAt.Format "Monday, 02 Jan 2006"}}
+</time>
 <content>
 {{.HtmlContent}}
 </content>
 
 <style>
 .post-title {
-  text-align: center;
-  font-size: 2rem;
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+.post-time {
+    display: block;
+    text-align: center;
 }
 </style>
 {{end}}

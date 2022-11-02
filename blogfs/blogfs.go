@@ -75,12 +75,14 @@ func homeFile(posts []models.Post, site *models.Site) fs.File {
 	buf := bytes.NewBufferString("")
 	err := outTmpls.Home.Execute(buf,
 		struct {
-			Site  *models.Site
-			Posts []models.Post
-			Title string
+			HomePath string
+			Site     *models.Site
+			Posts    []models.Post
+			Title    string
 		}{
-			Site:  site,
-			Posts: posts,
+			HomePath: ".",
+			Site:     site,
+			Posts:    posts,
 		},
 	)
 	if err != nil {
@@ -97,12 +99,16 @@ func postFile(p *models.Post, site *models.Site) fs.File {
 
 	err := outTmpls.Post.Execute(buf,
 		struct {
-			Site        *models.Site
+			HomePath    string
 			Title       string
+			Site        *models.Site
+			Post        *models.Post
 			HtmlContent template.HTML
 		}{
-			Site:        site,
+			HomePath:    "../",
 			Title:       p.Title,
+			Site:        site,
+			Post:        p,
 			HtmlContent: djot.ToHtml(p.Content),
 		},
 	)
