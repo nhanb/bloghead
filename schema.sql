@@ -6,7 +6,8 @@ pragma busy_timeout = 1000;
 create table site (
     id integer primary key check (id = 0), -- ensures single row
     title text not null default 'My Site',
-    tagline text not null default 'Let''s start this thing off right.'
+    tagline text not null default 'Let''s start this thing off right.',
+    export_to text not null default ''
 );
 insert into site(id) values(0);
 

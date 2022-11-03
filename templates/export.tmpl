@@ -1,0 +1,43 @@
+{{define "title"}}Export{{end}}
+
+{{define "body"}}
+<h1>Export</h1>
+
+<p style="max-width: 500px;">
+Export your blog into a folder of static HTML and assets,
+ready to be uploaded onto any static web hosting service.
+</p>
+
+<form action="{{.Paths.Export}}" method="post">
+
+  <label for="export-to">
+    <b>Destination:</b><br />
+    <span style="color:grey">needs to exist first</span>
+    <input type="text" name="export-to" id="export-to" value="{{.ExportTo}}" required />
+  </label>
+  {{.CsrfTag}}
+
+  <div>
+    <input type="submit" value="Export!" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
+  </div>
+</form>
+
+<script>
+// feeling cute, might delete later:
+(function trimFileProtocolPrefixOnPaste(){
+    // So I can literally ctrl+c a folder from file explorer then ctrl+v it
+    // into the form input.
+    var prefix = "file://";
+    document.getElementById("export-to").addEventListener("paste", function(evt){
+        var value = evt.clipboardData.getData("text");
+        if (value.indexOf(prefix) === 0) {
+            evt.preventDefault();
+            evt.target.value = value.slice(prefix.length);
+        }
+    });
+})();
+
+</script>
+{{end}}

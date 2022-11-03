@@ -2,11 +2,15 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -25,6 +29,7 @@ type PathDefs struct {
 	NewPost  string
 	EditPost string
 	Preview  string
+	Export   string
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -37,6 +42,7 @@ var Paths = PathDefs{
 	NewPost:  "/new",
 	EditPost: "/edit/",
 	Preview:  "/preview/",
+	Export:   "/export",
 }
 
 //go:embed templates
@@ -50,6 +56,7 @@ type Templates struct {
 	Settings *template.Template
 	NewPost  *template.Template
 	EditPost *template.Template
+	Export   *template.Template
 }
 
 var tmpls = Templates{
@@ -73,6 +80,11 @@ var tmpls = Templates{
 		"templates/base.tmpl",
 		"templates/edit-post.tmpl",
 	)),
+	Export: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/export.tmpl",
+	)),
 }
 
 func main() {
@@ -91,6 +103,7 @@ func main() {
 			http.FileServer(http.FS(&blogfs.BlogFS{})),
 		),
 	)
+	mux.HandleFunc(Paths.Export, exportHandler)
 
 	fmt.Printf("Editor server listening on port %d\n", EditorPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), mux))
@@ -230,7 +243,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		Msg:        msg,
 		ErrMsg:     errMsg,
 		Post:       *post,
-		Title:      fmt.Sprintf("Editing post #%d", post.Id),
+		Title:      fmt.Sprintf("Editing post: %s", post.Title),
 		SubmitText: "Update",
 		ActionPath: r.URL.Path,
 	})
@@ -270,6 +283,64 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 		Paths:   Paths,
 		CsrfTag: csrfTag,
 		Msg:     msg,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func exportHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	var exportTo, msg, errMsg string
+
+	switch r.Method {
+	case "GET":
+		exportTo = models.GetExportTo()
+	case "POST":
+		exportTo = r.FormValue("export-to")
+
+		if exportTo == "" {
+			errMsg = "Destination cannot be empty."
+		} else {
+			if !filepath.IsAbs(exportTo) {
+				errMsg = fmt.Sprintf(
+					`Destination must be an absolute path. "%s" isn't one.`,
+					exportTo,
+				)
+			} else if _, err := os.Stat(exportTo); errors.Is(err, fs.ErrNotExist) {
+				w.WriteHeader(http.StatusBadRequest)
+				errMsg = fmt.Sprintf(
+					`Folder "%s" does not exist. Create it first!`,
+					exportTo,
+				)
+			}
+		}
+
+		if errMsg == "" {
+			models.UpdateExportTo(exportTo)
+			msg = fmt.Sprintf(
+				`Exported to "%s" at %s`,
+				exportTo, time.Now().Format("3:04:05 PM"),
+			)
+		}
+	}
+
+	err := tmpls.Export.Execute(w, struct {
+		Paths    PathDefs
+		CsrfTag  template.HTML
+		ExportTo string
+		Msg      string
+		ErrMsg   string
+	}{
+		Paths:    Paths,
+		CsrfTag:  csrfTag,
+		ExportTo: exportTo,
+		Msg:      msg,
+		ErrMsg:   errMsg,
 	})
 	if err != nil {
 		log.Fatal(err)

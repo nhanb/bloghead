@@ -41,6 +41,32 @@ type Site struct {
 	Tagline string
 }
 
+func QuerySite() *Site {
+	var s Site
+	row := db.QueryRow("select title, tagline from site;")
+	err := row.Scan(&s.Title, &s.Tagline)
+	if err != nil {
+		panic(err)
+	}
+	return &s
+}
+
+func (s *Site) Update() {
+	db.Exec("update site set title=?, tagline=?;", s.Title, s.Tagline)
+}
+
+func GetExportTo() (s string) {
+	row := db.QueryRow("select export_to from site;")
+	if err := row.Scan(&s); err != nil {
+		panic(err)
+	}
+	return s
+}
+
+func UpdateExportTo(s string) {
+	db.Exec("update site set export_to=?;", s)
+}
+
 type Post struct {
 	Id        int64
 	Slug      string
@@ -148,20 +174,6 @@ func GetPostBySlug(slug string) (*Post, error) {
 		log.Fatal(err)
 	}
 	return &p, nil
-}
-
-func QuerySite() *Site {
-	var s Site
-	row := db.QueryRow("select title, tagline from site;")
-	err := row.Scan(&s.Title, &s.Tagline)
-	if err != nil {
-		panic(err)
-	}
-	return &s
-}
-
-func (s *Site) Update() {
-	db.Exec("update site set title=?, tagline=?;", s.Title, s.Tagline)
 }
 
 func (p *Post) Create() error {
