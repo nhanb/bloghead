@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/fs"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -21,7 +24,6 @@ import (
 
 const Dbfile = "Site1.bloghead"
 const EditorPort = 8000
-const PreviewPort = 8001
 
 type PathDefs struct {
 	Home     string
@@ -87,6 +89,8 @@ var tmpls = Templates{
 	)),
 }
 
+var bfs blogfs.BlogFS = blogfs.BlogFS{}
+
 func main() {
 	models.Init(Dbfile)
 
@@ -100,7 +104,7 @@ func main() {
 		Paths.Preview,
 		http.StripPrefix(
 			Paths.Preview,
-			http.FileServer(http.FS(&blogfs.BlogFS{})),
+			http.FileServer(http.FS(&bfs)),
 		),
 	)
 	mux.HandleFunc(Paths.Export, exportHandler)
@@ -321,11 +325,16 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if errMsg == "" {
-			models.UpdateExportTo(exportTo)
-			msg = fmt.Sprintf(
-				`Exported to "%s" at %s`,
-				exportTo, time.Now().Format("3:04:05 PM"),
-			)
+			err := Export(&bfs, exportTo)
+			if err != nil {
+				errMsg = err.Error()
+			} else {
+				models.UpdateExportTo(exportTo)
+				msg = fmt.Sprintf(
+					"Exported successfully at %s",
+					time.Now().Format("3:04:05 PM"),
+				)
+			}
 		}
 	}
 
@@ -345,4 +354,54 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// Erases dest dir then copies everything from srcFS into dest.
+// It assumes dest dir already exists.
+func Export(srcFs fs.FS, dest string) error {
+	dir, err := ioutil.ReadDir(dest)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, d := range dir {
+		if err := os.RemoveAll(path.Join(dest, d.Name())); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	err = fs.WalkDir(srcFs, ".", func(path string, d fs.DirEntry, err error) error {
+		if path == "." {
+			return nil
+		}
+
+		targetPath := filepath.Join(dest, path)
+
+		if d.IsDir() {
+			err := os.Mkdir(targetPath, os.FileMode(0755))
+			if err != nil {
+				return fmt.Errorf("create dest dir: %w", err)
+			}
+			return nil
+		}
+
+		destFile, err := os.Create(targetPath)
+		if err != nil {
+			return fmt.Errorf("create dest file: %w", err)
+		}
+		defer destFile.Close()
+
+		srcFile, err := srcFs.Open(path)
+		if err != nil {
+			return fmt.Errorf("open src file: %w", err)
+		}
+		defer srcFile.Close()
+
+		_, err = io.Copy(destFile, srcFile)
+		if err != nil {
+			return fmt.Errorf("cp src dest: %w", err)
+		}
+		return nil
+	})
+
+	return err
 }

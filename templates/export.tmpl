@@ -8,7 +8,7 @@ Export your blog into a folder of static HTML and assets,
 ready to be uploaded onto any static web hosting service.
 </p>
 
-<form action="{{.Paths.Export}}" method="post">
+<form action="{{.Paths.Export}}" method="post" id="export-form">
 
   <label for="export-to">
     <b>Destination:</b><br />
@@ -16,6 +16,11 @@ ready to be uploaded onto any static web hosting service.
     <input type="text" name="export-to" id="export-to" value="{{.ExportTo}}" required />
   </label>
   {{.CsrfTag}}
+
+  <p style="color:chocolate; margin:0;">
+    <strong>Warning:</strong>
+    exporting will erase all existing data in destination folder.
+  </p>
 
   <div>
     <input type="submit" value="Export!" />
@@ -30,7 +35,7 @@ ready to be uploaded onto any static web hosting service.
     // So I can literally ctrl+c a folder from file explorer then ctrl+v it
     // into the form input.
     var prefix = "file://";
-    document.getElementById("export-to").addEventListener("paste", function(evt){
+    document.getElementById("export-to").addEventListener("paste", function(evt) {
         var value = evt.clipboardData.getData("text");
         if (value.indexOf(prefix) === 0) {
             evt.preventDefault();
@@ -38,6 +43,12 @@ ready to be uploaded onto any static web hosting service.
         }
     });
 })();
+
+document.getElementById("export-form").addEventListener("submit", function(e) {
+    if (!window.confirm("The destination folder will be overwritten. Are you sure?")) {
+        e.preventDefault();
+    }
+});
 
 </script>
 {{end}}

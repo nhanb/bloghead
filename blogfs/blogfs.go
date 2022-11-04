@@ -3,6 +3,7 @@ package blogfs
 import (
 	"bytes"
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -16,7 +17,7 @@ import (
 )
 
 var _ fs.FS = (*BlogFS)(nil)
-var _ fs.File = (*blogFile)(nil)
+var _ fs.ReadDirFile = (*blogFile)(nil)
 var _ fs.FileInfo = (*blogFile)(nil)
 var _ fs.DirEntry = (*blogFile)(nil)
 
@@ -48,7 +49,7 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 	println("Open:", name)
 
 	if name == "." {
-		return &blogFile{isDir: true}, nil
+		return &blogFile{name: ".", isDir: true}, nil
 	}
 
 	if name == "index.html" {
@@ -126,10 +127,33 @@ type blogFile struct {
 	content []byte
 	offset  int64
 	isDir   bool
+
+	children       []fs.DirEntry
+	childrenOffset int64
 }
 
 func (f *blogFile) Stat() (fs.FileInfo, error) {
 	return f, nil
+}
+
+func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
+	if !f.isDir {
+		return nil, errors.New(fmt.Sprintf("%s is a file, not a dir!", f.name))
+	}
+
+	var children []fs.DirEntry
+	if f.name == "." {
+		for _, slug := range models.QueryPostSlugs() {
+			children = append(children, &blogFile{
+				name:  slug,
+				isDir: true,
+			})
+		}
+	}
+
+	children = append(children, &blogFile{name: "index.html", isDir: false})
+
+	return children, nil
 }
 
 func (bf *blogFile) Read(buf []byte) (int, error) {
