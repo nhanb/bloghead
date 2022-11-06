@@ -23,9 +23,11 @@ Current dev dependencies:
 - Docker (to build a mostly-static executable for [djot](https://github.com/jgm/djot))
 
 ```sh
+# run these once:
 git submodule update --init --recursive --remote  # pull djot submodule
 make blogfs/djotbin
 make init-db
+
 make watch
 ```
 

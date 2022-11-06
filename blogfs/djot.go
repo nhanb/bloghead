@@ -50,7 +50,6 @@ func CreateDjotbin() {
 	err = tmpFile.Chmod(fs.FileMode(0700))
 	check(err)
 	tmpDjotbinPath = tmpFile.Name()
-	println("Created", tmpDjotbinPath)
 }
 
 func check(err error) {

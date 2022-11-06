@@ -15,10 +15,10 @@ init-db:
 	go run ./cmd/seed
 
 clean:
-	rm -rf www Site1.bloghead bloghead
+	rm -rf www Site1.bloghead bloghead blogfs/djotbin
 
-blogfs/djotbin: Dockerfile djot/*
-	docker build -t djotbuilder .
-	docker create --name dummy djotbuilder
-	docker cp dummy:/bloghead/djot/djotbin ./blogfs/
-	docker rm -f dummy
+blogfs/djotbin: djotbin.Dockerfile djot/*
+	docker build -t djotbuilder -f djotbin.Dockerfile .
+	docker create --name djotdummy djotbuilder
+	docker cp djotdummy:/djot/djotbin ./blogfs/
+	docker rm -f djotdummy
