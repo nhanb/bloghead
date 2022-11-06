@@ -1,0 +1,35 @@
+image: debian/oldstable
+
+packages:
+  - curl
+  - gcc
+  - luarocks
+
+tasks:
+  - build-djotbin: |
+      luarocks install luastatic --local
+      cd bloghead/djot
+      ~/.luarocks/bin/luastatic\
+        bin/main.lua\
+        djot.lua\
+        djot/ast.lua\
+        djot/attributes.lua\
+        djot/block.lua\
+        djot/emoji.lua\
+        djot/html.lua\
+        djot/inline.lua\
+        djot/json.lua\
+        djot/match.lua\
+        /usr/lib/x86_64-linux-gnu/liblua5.1.a\
+        -I /usr/include/lua5.1\
+        -o ../blogfs/djotbin
+
+  - build-bloghead: |
+      curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz
+      tar -xf go.tar.gz
+      cd bloghead
+      ~/go/bin/go build
+
+artifacts:
+  - bloghead/bloghead
+  - bloghead/blogfs/djotbin
