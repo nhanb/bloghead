@@ -1,4 +1,4 @@
-package djot
+package blogfs
 
 import (
 	"html/template"
@@ -7,7 +7,7 @@ import (
 	"os/exec"
 )
 
-func ToHtml(djotText string) template.HTML {
+func djotToHtml(djotText string) template.HTML {
 	cmd := exec.Command("djot")
 
 	stdin, err := cmd.StdinPipe()

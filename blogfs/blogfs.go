@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"go.imnhan.com/bloghead/djot"
 	"go.imnhan.com/bloghead/models"
 )
 
@@ -110,7 +109,7 @@ func postFile(p *models.Post, site *models.Site) fs.File {
 			Title:       p.Title,
 			Site:        site,
 			Post:        p,
-			HtmlContent: djot.ToHtml(p.Content),
+			HtmlContent: djotToHtml(p.Content),
 		},
 	)
 	if err != nil {
