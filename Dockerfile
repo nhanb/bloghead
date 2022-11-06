@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y curl gcc luarocks
 RUN luarocks install luastatic
 ADD . /bloghead
 
+# Create a djotbin executable that only depends on glibc:
 WORKDIR /bloghead/djot
 RUN luastatic\
   bin/main.lua\

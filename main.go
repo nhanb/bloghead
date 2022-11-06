@@ -94,11 +94,6 @@ var bfs blogfs.BlogFS = blogfs.BlogFS{}
 func main() {
 	models.Init(Dbfile)
 	blogfs.CreateDjotbin()
-	// TODO: this defer currently doesn't work because the http server
-	// just aborts without running all pending defers.
-	// This may give some hints:
-	// https://stackoverflow.com/questions/39320025/how-to-stop-http-listenandserve
-	defer blogfs.DeleteDjotbin()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/favicon.ico", faviconHandler)

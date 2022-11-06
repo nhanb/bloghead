@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 )
 
 //go:embed djotbin
@@ -32,8 +33,16 @@ func djotToHtml(djotText string) template.HTML {
 	return template.HTML(out)
 }
 
+// Writes the embeded djotbin executable into a temp file, overwriting any
+// existing file to make sure we always have the most up-to-date version.
+//
+// I would have preferred to os.CreateTemp() on startup and delete it on exit,
+// but I haven't figured out how to run cleanups after exiting an http server,
+// so this will have to do for now.
 func CreateDjotbin() {
-	tmpFile, err := os.CreateTemp("", "djotbin")
+	tmpDjotbinPath = path.Join(os.TempDir(), "djotbin")
+	os.Remove(tmpDjotbinPath)
+	tmpFile, err := os.Create(tmpDjotbinPath)
 	check(err)
 	defer tmpFile.Close()
 	_, err = tmpFile.Write(djotbin)
@@ -42,12 +51,6 @@ func CreateDjotbin() {
 	check(err)
 	tmpDjotbinPath = tmpFile.Name()
 	println("Created", tmpDjotbinPath)
-}
-
-func DeleteDjotbin() {
-	err := os.Remove(tmpDjotbinPath)
-	check(err)
-	println("Deleted", tmpDjotbinPath)
 }
 
 func check(err error) {
