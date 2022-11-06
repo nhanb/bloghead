@@ -1,0 +1,3 @@
+[submodule "djot"]
+	path = djot
+	url = https://github.com/jgm/djot.git

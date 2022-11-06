@@ -16,3 +16,9 @@ init-db:
 
 clean:
 	rm -rf www Site1.bloghead bloghead
+
+blogfs/djotbin: Dockerfile djot/*
+	docker build -t djotbuilder .
+	docker create --name dummy djotbuilder
+	docker cp dummy:/bloghead/djot/djotbin ./blogfs/
+	docker rm -f dummy

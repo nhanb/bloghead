@@ -20,10 +20,11 @@ Current dev dependencies:
 
 - [go](https://go.dev/)
 - [entr](https://eradman.com/entrproject/)
-- [djot](https://github.com/jgm/djot)
-  (just make sure the lua `djot` executable is available from your $PATH)
+- Docker (to build a mostly-static executable for [djot](https://github.com/jgm/djot))
 
 ```sh
+git submodule update --init --recursive --remote  # pull djot submodule
+make blogfs/djotbin
 make init-db
 make watch
 ```
