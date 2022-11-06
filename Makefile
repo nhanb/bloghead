@@ -17,8 +17,22 @@ init-db:
 clean:
 	rm -rf www Site1.bloghead bloghead blogfs/djotbin
 
-blogfs/djotbin: djotbin.Dockerfile djot/*
-	docker build -t djotbuilder -f djotbin.Dockerfile .
-	docker create --name djotdummy djotbuilder
-	docker cp djotdummy:/djot/djotbin ./blogfs/
-	docker rm -f djotdummy
+# Unfortunately Arch Linux doesn't provide static libs (.a),
+# so for dev purposes I have to dynamically link to liblua:
+# 	https://github.com/ers35/luastatic/issues/21
+# The CI build is statically linked though.
+blogfs/djotbin: djot/*
+	cd djot; luastatic\
+		bin/main.lua\
+		djot.lua\
+		djot/ast.lua\
+		djot/attributes.lua\
+		djot/block.lua\
+		djot/emoji.lua\
+		djot/html.lua\
+		djot/inline.lua\
+		djot/json.lua\
+		djot/match.lua\
+		-llua\
+		-I/usr/include\
+		-o ../blogfs/djotbin

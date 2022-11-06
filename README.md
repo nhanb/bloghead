@@ -21,8 +21,9 @@ architectureastronomyphobia.
 Current dev dependencies:
 
 - [go](https://go.dev/)
-- [entr](https://eradman.com/entrproject/)
-- Docker (to build a mostly-static executable for [djot](https://github.com/jgm/djot))
+- [entr](https://eradman.com/entrproject/): for `make watch`
+- [luastatic](https://github.com/ers35/luastatic): to compile djot - I
+  installed it using luarocks.
 
 ```sh
 # run these once:
