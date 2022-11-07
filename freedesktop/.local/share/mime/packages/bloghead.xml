@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-bloghead">
+        <comment>bloghead file</comment>
+        <icon name="application-x-bloghead"/>
+        <glob-deleteall/>
+        <glob pattern="*.bloghead"/>
+    </mime-type>
+</mime-info>

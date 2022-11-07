@@ -40,6 +40,9 @@ type PathDefs struct {
 func (p *PathDefs) EditPostWithId(id int64) string {
 	return fmt.Sprintf("%s/%d", p.EditPost, id)
 }
+func (p PathDefs) InputFileName() string {
+	return filepath.Base(p.InputFile)
+}
 
 var Paths = PathDefs{
 	Home:       "/",
@@ -451,8 +454,18 @@ func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	flag.StringVar(&Paths.InputFile, "i", "Site1.bloghead", "input file")
 	flag.Parse()
+	args := flag.Args()
+	switch len(args) {
+	case 0:
+		Paths.InputFile = "Site1.bloghead"
+	case 1:
+		Paths.InputFile = args[0]
+	default:
+		fmt.Println("Usage: bloghead [filename]")
+		fmt.Println("  filename defaults to Site1.bloghead")
+		os.Exit(1)
+	}
 
 	blogfs.CreateDjotbin()
 	models.Init()

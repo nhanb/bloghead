@@ -9,6 +9,9 @@ run:
 watch:
 	find . -name '*.go' -or -name '*.tmpl' | entr -rc go run *.go
 
+watch-build:
+	find . -name '*.go' -or -name '*.tmpl' | entr -r go build
+
 init-db:
 	rm -f Site1.bloghead
 	sqlite3 Site1.bloghead < schema.sql

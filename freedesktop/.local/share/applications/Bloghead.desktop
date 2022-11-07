@@ -1,0 +1,27 @@
+[Desktop Entry]
+
+# The type as listed above
+Type=Application
+
+# The version of the desktop entry specification to which this file complies
+Version=1.0
+
+# The name of the application
+Name=Bloghead
+
+# A comment which can/will be used as a tooltip
+Comment=The PhotoShop of personal web publishing
+
+# The path to the folder in which the executable is run
+Path=/home/nhanb/pj/bloghead
+
+# The executable of the application, possibly with arguments.
+Exec=/home/nhanb/pj/bloghead/bloghead %u
+
+# The name of the icon that will be used to display this entry
+Icon=/home/nhanb/pj/bloghead/favicon.ico
+
+# Describes whether this application needs to be run in a terminal or not
+Terminal=true
+
+MimeType=application/x-bloghead

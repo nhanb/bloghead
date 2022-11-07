@@ -36,3 +36,7 @@ make watch
 
 Things are especially messy right now. Proper desktop-friendly distribution
 will be done once core features are in place.
+
+## (WIP) Linux desktop integration
+
+They're in the `./freedesktop/` dir. Try `stow freedesktop`.
