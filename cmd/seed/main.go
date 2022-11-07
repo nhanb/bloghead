@@ -18,7 +18,8 @@ func main() {
 	seeds, err := filepath.Glob("seed-data/*.seed")
 	check(err)
 
-	models.Init("Site1.bloghead")
+	models.Init()
+	models.SetDbFile("Site1.bloghead")
 
 	for _, seed := range seeds {
 		data, _ := os.ReadFile(seed)

@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"github.com/getlantern/systray"
+	"fyne.io/systray"
 )
 
 func openInBrowser() error {
@@ -30,7 +30,7 @@ func openInBrowser() error {
 }
 
 func systrayOnReady() {
-	systray.SetTemplateIcon(favicon, favicon)
+	systray.SetTemplateIcon(faviconpng, faviconpng)
 
 	tooltip := fmt.Sprintf("Bloghead is live at http://localhost:%d", Port)
 	systray.SetTitle(tooltip)

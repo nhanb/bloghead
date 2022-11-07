@@ -10,7 +10,7 @@ Version=1.0
 Name=Bloghead
 
 # A comment which can/will be used as a tooltip
-Comment=The PhotoShop of personal web publishing
+Comment=The Photoshop of personal web publishing
 
 # The path to the folder in which the executable is run
 Path=/home/nhanb/pj/bloghead

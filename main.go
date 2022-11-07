@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/getlantern/systray"
+	"fyne.io/systray"
 	"go.imnhan.com/bloghead/blogfs"
 	"go.imnhan.com/bloghead/models"
 )
@@ -62,6 +62,9 @@ var tmplsFS embed.FS
 
 //go:embed favicon.ico
 var favicon []byte
+
+//go:embed favicon.png
+var faviconpng []byte
 
 type Templates struct {
 	Home       *template.Template
@@ -471,6 +474,7 @@ func main() {
 		fmt.Println("  filename defaults to Site1.bloghead")
 		os.Exit(1)
 	}
+	// TODO: check if input file is a valid bloghead db
 
 	blogfs.CreateDjotbin()
 	models.Init()
