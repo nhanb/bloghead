@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"errors"
 	"flag"
@@ -10,6 +11,7 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -19,6 +21,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getlantern/systray"
 	"go.imnhan.com/bloghead/blogfs"
 	"go.imnhan.com/bloghead/models"
 )
@@ -104,23 +107,23 @@ var tmpls = Templates{
 
 var bfs blogfs.BlogFS = blogfs.BlogFS{}
 
-func setupServer() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/favicon.ico", faviconHandler)
-	mux.HandleFunc(Paths.Home, homeHandler)
-	mux.HandleFunc(Paths.Settings, settingsHandler)
-	mux.HandleFunc(Paths.NewPost, newPostHandler)
-	mux.HandleFunc(Paths.EditPost, editPostHandler)
-	mux.Handle(
+func httpServer() *http.Server {
+	srv := &http.Server{}
+	http.HandleFunc("/favicon.ico", faviconHandler)
+	http.HandleFunc(Paths.Home, homeHandler)
+	http.HandleFunc(Paths.Settings, settingsHandler)
+	http.HandleFunc(Paths.NewPost, newPostHandler)
+	http.HandleFunc(Paths.EditPost, editPostHandler)
+	http.Handle(
 		Paths.Preview,
 		http.StripPrefix(
 			Paths.Preview,
 			http.FileServer(http.FS(&bfs)),
 		),
 	)
-	mux.HandleFunc(Paths.Export, exportHandler)
-	mux.HandleFunc(Paths.ChangeSite, changeSiteHandler)
-	return mux
+	http.HandleFunc(Paths.Export, exportHandler)
+	http.HandleFunc(Paths.ChangeSite, changeSiteHandler)
+	return srv
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -454,6 +457,8 @@ func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	var fNoBrowser bool
+	flag.BoolVar(&fNoBrowser, "nobrowser", false, "Don't automatically open browser on startup")
 	flag.Parse()
 	args := flag.Args()
 	switch len(args) {
@@ -471,7 +476,32 @@ func main() {
 	models.Init()
 	models.SetDbFile(Paths.InputFile)
 
-	mux := setupServer()
+	srv := httpServer()
+
+	go func() {
+		onExit := func() {
+			// TODO: is it even safe to call srv.Shutdown() from another
+			// goroutine? Do I need to talk via channels?
+			if err := srv.Shutdown(context.TODO()); err != nil {
+				panic(err)
+			}
+		}
+		systray.Run(systrayOnReady, onExit)
+	}()
+
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", Port))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// This runs after the socket starts listening, but before the blocking
+	// HTTP server actually starts.
+	if !fNoBrowser {
+		openInBrowser()
+	}
+
 	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", Port), mux))
+	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
 }

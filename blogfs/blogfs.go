@@ -135,6 +135,7 @@ func (f *blogFile) Stat() (fs.FileInfo, error) {
 	return f, nil
 }
 
+// TODO: implement pagination
 func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
 	if !f.isDir {
 		return nil, errors.New(fmt.Sprintf("%s is a file, not a dir!", f.name))

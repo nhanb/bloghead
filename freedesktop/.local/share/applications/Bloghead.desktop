@@ -22,6 +22,6 @@ Exec=/home/nhanb/pj/bloghead/bloghead %u
 Icon=/home/nhanb/pj/bloghead/favicon.ico
 
 # Describes whether this application needs to be run in a terminal or not
-Terminal=true
+Terminal=false
 
 MimeType=application/x-bloghead
