@@ -13,9 +13,13 @@
       }
       input,
       textarea {
-        font-family: inherit;
+        font-family: "Roboto Mono", monospace;
         font-size: inherit;
         padding: 0.3rem;
+      }
+      input[type=submit],
+      input[type=file]{
+        font-family: inherit;
       }
 
       html {
@@ -34,6 +38,7 @@
         list-style-type: none;
         padding: 0;
         margin: 0;
+        display: inline-block;
       }
       nav ul li {
         display: inline-block;
@@ -85,7 +90,10 @@
         <li><a href="{{.Paths.Home}}">Posts</a></li>
         <li><a href="{{.Paths.Settings}}">Settings</a></li>
         <li><a href="{{.Paths.Export}}">Export</a></li>
-        <li><a href="{{.Paths.Preview}}" target="_blank">Preview↗</a></li>
+        <li><a href="{{.Paths.Preview}}" target="_blank">Preview site↗</a></li>
+    </ul>
+    <ul style="float:right;">
+        <li>Editing <b>{{.Paths.InputFile}}</b> — <a href="{{.Paths.ChangeSite}}">Change site</a></li>
     </ul>
     </nav>
 

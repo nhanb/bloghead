@@ -4,7 +4,7 @@
 <h1>{{.Title}}</h1>
 
 {{if .Post.Slug}}
-<a href="{{.Paths.Preview}}/{{.Post.Slug}}/">Preview live version</a>
+<a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">Preview live post↗</a>
 {{end}}
 
 <form action="{{.ActionPath}}" method="post">
@@ -46,7 +46,7 @@
     {{if .Msg}}
     <span id="msg">
         {{.Msg}}
-        ⟶  <a href="{{.Paths.Preview}}/{{.Post.Slug}}/">preview here</a>
+        — <a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">preview here↗</a>
     </span>
     {{end}}
 

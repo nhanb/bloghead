@@ -1,0 +1,26 @@
+{{define "title"}}Change site{{end}}
+
+{{define "body"}}
+<h1>Change site</h1>
+
+<p style="max-width: 500px;">
+Pick another <code>.bloghead</code> file to edit:
+</p>
+
+<form action="{{.Paths.Settings}}" method="post">
+  <input type="file" name="site-file" id="site-file" required />
+
+  {{.CsrfTag}}
+
+  <div>
+    <input type="submit" value="Submit" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+  </div>
+</form>
+
+<style>
+#site-file {
+    border: 1px dashed grey;
+}
+</style>
+{{end}}

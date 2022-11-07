@@ -14,7 +14,7 @@ import (
 
 var db *sql.DB
 
-func Init(dbfile string) {
+func Init() {
 	// Register REGEXP function using Go
 	// https://pkg.go.dev/github.com/mattn/go-sqlite3#hdr-Go_SQlite3_Extensions
 	regex := func(re, s string) (bool, error) {
@@ -27,13 +27,21 @@ func Init(dbfile string) {
 			},
 		},
 	)
+}
+
+func SetDbFile(path string) {
+	if db != nil {
+		err := db.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	var err error
-	db, err = sql.Open("sqlite3_extended", dbfile)
+	db, err = sql.Open("sqlite3_extended", path)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 type Site struct {

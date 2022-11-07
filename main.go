@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"errors"
+	"flag"
 	"fmt"
 	"html/template"
 	"io"
@@ -22,16 +23,18 @@ import (
 	"go.imnhan.com/bloghead/models"
 )
 
-const Dbfile = "Site1.bloghead"
-const EditorPort = 8000
+const Port = 8000
 
 type PathDefs struct {
-	Home     string
-	Settings string
-	NewPost  string
-	EditPost string
-	Preview  string
-	Export   string
+	Home       string
+	Settings   string
+	NewPost    string
+	EditPost   string
+	Preview    string
+	Export     string
+	ChangeSite string
+
+	InputFile string
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -39,12 +42,13 @@ func (p *PathDefs) EditPostWithId(id int64) string {
 }
 
 var Paths = PathDefs{
-	Home:     "/",
-	Settings: "/settings",
-	NewPost:  "/new",
-	EditPost: "/edit/",
-	Preview:  "/preview/",
-	Export:   "/export",
+	Home:       "/",
+	Settings:   "/settings",
+	NewPost:    "/new",
+	EditPost:   "/edit/",
+	Preview:    "/preview/",
+	Export:     "/export",
+	ChangeSite: "/change",
 }
 
 //go:embed templates
@@ -54,11 +58,12 @@ var tmplsFS embed.FS
 var favicon []byte
 
 type Templates struct {
-	Home     *template.Template
-	Settings *template.Template
-	NewPost  *template.Template
-	EditPost *template.Template
-	Export   *template.Template
+	Home       *template.Template
+	Settings   *template.Template
+	NewPost    *template.Template
+	EditPost   *template.Template
+	Export     *template.Template
+	ChangeSite *template.Template
 }
 
 var tmpls = Templates{
@@ -87,14 +92,16 @@ var tmpls = Templates{
 		"templates/base.tmpl",
 		"templates/export.tmpl",
 	)),
+	ChangeSite: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/change-site.tmpl",
+	)),
 }
 
 var bfs blogfs.BlogFS = blogfs.BlogFS{}
 
-func main() {
-	models.Init(Dbfile)
-	blogfs.CreateDjotbin()
-
+func setupServer() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/favicon.ico", faviconHandler)
 	mux.HandleFunc(Paths.Home, homeHandler)
@@ -109,9 +116,8 @@ func main() {
 		),
 	)
 	mux.HandleFunc(Paths.Export, exportHandler)
-
-	fmt.Printf("Editor server listening on port %d\n", EditorPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", EditorPort), mux))
+	mux.HandleFunc(Paths.ChangeSite, changeSiteHandler)
+	return mux
 }
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
@@ -405,4 +411,54 @@ func Export(srcFs fs.FS, dest string) error {
 	})
 
 	return err
+}
+
+func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	var site *models.Site
+	var msg string
+
+	switch r.Method {
+	case "GET":
+		site = models.QuerySite()
+	case "POST":
+		site = &models.Site{
+			Title:   r.FormValue("title"),
+			Tagline: r.FormValue("tagline"),
+		}
+		site.Update()
+		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
+	}
+
+	err := tmpls.ChangeSite.Execute(w, struct {
+		Site    models.Site
+		Paths   PathDefs
+		CsrfTag template.HTML
+		Msg     string
+	}{
+		Site:    *site,
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Msg:     msg,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func main() {
+	flag.StringVar(&Paths.InputFile, "i", "Site1.bloghead", "input file")
+	flag.Parse()
+
+	blogfs.CreateDjotbin()
+	models.Init()
+	models.SetDbFile(Paths.InputFile)
+
+	mux := setupServer()
+	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("127.0.0.1:%d", Port), mux))
 }
