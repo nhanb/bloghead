@@ -9,10 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 )
-
-//go:embed djotbin
-var djotbin []byte
 
 var tmpDjotbinPath string
 
@@ -41,6 +39,11 @@ func djotToHtml(djotText string) template.HTML {
 // so this will have to do for now.
 func CreateDjotbin() {
 	tmpDjotbinPath = path.Join(os.TempDir(), "djotbin")
+	if runtime.GOOS == "windows" {
+		// Windows wouldn't let me exec a file without an exe extension
+		tmpDjotbinPath += ".exe"
+	}
+
 	os.Remove(tmpDjotbinPath)
 	tmpFile, err := os.Create(tmpDjotbinPath)
 	check(err)
