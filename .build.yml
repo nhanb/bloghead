@@ -44,11 +44,16 @@ tasks:
 
   - build-bloghead: |
       curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz
-      tar -xf go.tar.gz
+      tar -xf go.tar.gz && rm go.tar.gz
       cd bloghead
       ~/go/bin/go build
 
+  - build-bloghead-exe: |
+      cd bloghead
+      CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows ~/go/bin/go build
+
 artifacts:
   - bloghead/bloghead
+  - bloghead/bloghead.exe
   - bloghead/blogfs/djotbin
   - bloghead/blogfs/djotbin.exe

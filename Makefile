@@ -1,4 +1,4 @@
-.PHONY : build run watch init-db clean
+.PHONY : build run watch init-db clean bloghead.exe
 
 build:
 	go build
@@ -18,7 +18,8 @@ init-db:
 	go run ./cmd/seed
 
 clean:
-	rm -rf www Site1.bloghead bloghead blogfs/djotbin blogfs/djotbin.exe
+	rm -rf www Site1.bloghead bloghead blogfs/djotbin\
+		bloghead.exe blogfs/djotbin.exe
 
 # Unfortunately Arch Linux doesn't provide static libs (.a),
 # so for dev purposes I have to dynamically link to liblua:
@@ -57,3 +58,6 @@ blogfs/djotbin.exe: djot/*
 		-I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
 		-o ../blogfs/djotbin
 	rm djot/main.luastatic.c
+
+bloghead.exe:
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows go build
