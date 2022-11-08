@@ -4,6 +4,7 @@ packages:
   - curl
   - gcc
   - luarocks
+  - mingw-w64
 
 tasks:
   - build-djotbin: |
@@ -24,6 +25,23 @@ tasks:
         -I /usr/include/lua5.1\
         -o ../blogfs/djotbin
 
+  - build-djotbin-exe: |
+      cd bloghead/djot
+      CC=x86_64-w64-mingw32-gcc ~/.luarocks/bin/luastatic\
+        bin/main.lua\
+        djot.lua\
+        djot/ast.lua\
+        djot/attributes.lua\
+        djot/block.lua\
+        djot/emoji.lua\
+        djot/html.lua\
+        djot/inline.lua\
+        djot/json.lua\
+        djot/match.lua\
+        ../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
+        -I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
+        -o ../blogfs/djotbin.exe -static
+
   - build-bloghead: |
       curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz
       tar -xf go.tar.gz
@@ -33,3 +51,4 @@ tasks:
 artifacts:
   - bloghead/bloghead
   - bloghead/blogfs/djotbin
+  - bloghead/blogfs/djotbin.exe

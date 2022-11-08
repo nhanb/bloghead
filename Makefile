@@ -18,7 +18,7 @@ init-db:
 	go run ./cmd/seed
 
 clean:
-	rm -rf www Site1.bloghead bloghead blogfs/djotbin
+	rm -rf www Site1.bloghead bloghead blogfs/djotbin blogfs/djotbin.exe
 
 # Unfortunately Arch Linux doesn't provide static libs (.a),
 # so for dev purposes I have to dynamically link to liblua:
@@ -39,3 +39,21 @@ blogfs/djotbin: djot/*
 		-llua\
 		-I/usr/include\
 		-o ../blogfs/djotbin
+	rm djot/main.luastatic.c
+
+blogfs/djotbin.exe: djot/*
+	cd djot; CC=x86_64-w64-mingw32-gcc luastatic\
+		bin/main.lua\
+		djot.lua\
+		djot/ast.lua\
+		djot/attributes.lua\
+		djot/block.lua\
+		djot/emoji.lua\
+		djot/html.lua\
+		djot/inline.lua\
+		djot/json.lua\
+		djot/match.lua\
+		../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
+		-I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
+		-o ../blogfs/djotbin
+	rm djot/main.luastatic.c
