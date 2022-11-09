@@ -8,7 +8,7 @@ import (
 	"fyne.io/systray"
 )
 
-func openInBrowser() error {
+func openInBrowser(url string) error {
 	var cmd string
 	var args []string
 
@@ -22,17 +22,15 @@ func openInBrowser() error {
 		cmd = "xdg-open"
 	}
 
-	url := fmt.Sprintf("http://localhost:%d", Port)
 	fmt.Printf("Opening %s in browser\n", url)
-
 	args = append(args, url)
 	return exec.Command(cmd, args...).Start()
 }
 
-func systrayOnReady() {
+func systrayOnReady(url string) {
 	systray.SetTemplateIcon(faviconpng, faviconpng)
 
-	tooltip := fmt.Sprintf("Bloghead is live at http://localhost:%d", Port)
+	tooltip := fmt.Sprintf("Bloghead is live at %s", url)
 	systray.SetTitle(tooltip)
 	systray.SetTooltip(tooltip)
 
@@ -42,9 +40,10 @@ func systrayOnReady() {
 
 	mOpen := systray.AddMenuItem("Open Web UI", "Open Web UI")
 	go func() {
-		<-mOpen.ClickedCh
-		if err := openInBrowser(); err != nil {
-			panic(err)
+		for range mOpen.ClickedCh {
+			if err := openInBrowser(url); err != nil {
+				panic(err)
+			}
 		}
 	}()
 

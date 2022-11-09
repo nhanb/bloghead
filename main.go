@@ -26,8 +26,6 @@ import (
 	"go.imnhan.com/bloghead/models"
 )
 
-var Port int
-
 type PathDefs struct {
 	Home       string
 	Settings   string
@@ -109,25 +107,6 @@ var tmpls = Templates{
 }
 
 var bfs blogfs.BlogFS = blogfs.BlogFS{}
-
-func httpServer() *http.Server {
-	srv := &http.Server{}
-	http.HandleFunc("/favicon.ico", faviconHandler)
-	http.HandleFunc(Paths.Home, homeHandler)
-	http.HandleFunc(Paths.Settings, settingsHandler)
-	http.HandleFunc(Paths.NewPost, newPostHandler)
-	http.HandleFunc(Paths.EditPost, editPostHandler)
-	http.Handle(
-		Paths.Preview,
-		http.StripPrefix(
-			Paths.Preview,
-			http.FileServer(http.FS(&bfs)),
-		),
-	)
-	http.HandleFunc(Paths.Export, exportHandler)
-	http.HandleFunc(Paths.ChangeSite, changeSiteHandler)
-	return srv
-}
 
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -485,44 +464,74 @@ func processFlags() *Flags {
 	return &f
 }
 
+func startHttpServer(flags *Flags, portChan chan int) *http.Server {
+	srv := &http.Server{}
+	http.HandleFunc("/favicon.ico", faviconHandler)
+	http.HandleFunc(Paths.Home, homeHandler)
+	http.HandleFunc(Paths.Settings, settingsHandler)
+	http.HandleFunc(Paths.NewPost, newPostHandler)
+	http.HandleFunc(Paths.EditPost, editPostHandler)
+	http.Handle(
+		Paths.Preview,
+		http.StripPrefix(
+			Paths.Preview,
+			http.FileServer(http.FS(&bfs)),
+		),
+	)
+	http.HandleFunc(Paths.Export, exportHandler)
+	http.HandleFunc(Paths.ChangeSite, changeSiteHandler)
+
+	go func() {
+		listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		port := listener.Addr().(*net.TCPAddr).Port
+		portChan <- port
+		close(portChan)
+
+		// This must run after the socket starts listening, but before the
+		// blocking HTTP server actually starts.
+		if !flags.NoBrowser {
+			openInBrowser(fmt.Sprintf("http://localhost:%d", port))
+		}
+
+		fmt.Printf("Serving %s on port %d\n", Paths.InputFile, port)
+		if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal(err)
+		}
+	}()
+
+	return srv
+}
+
 func main() {
 	flags := processFlags()
 	// TODO: check if input file is a valid bloghead db
 
-	blogfs.CreateDjotbin()
 	models.Init()
 	models.SetDbFile(Paths.InputFile)
 
-	srv := httpServer()
+	cleanUpDjotbin := blogfs.CreateDjotbin()
+	defer cleanUpDjotbin()
 
-	go func() {
-		onExit := func() {
-			blogfs.CleanupDjotbin()
+	// We don't know what port we get until we actually start the server, but
+	// the server starts asynchronously, so we need a channel here to wait
+	// until we get back the actual port.
+	portChan := make(chan int)
+	srv := startHttpServer(flags, portChan)
+	port := <-portChan
 
-			// TODO: is it even safe to call srv.Shutdown() from another
-			// goroutine? Do I need to talk via channels?
-			if err := srv.Shutdown(context.TODO()); err != nil {
-				panic(err)
-			}
+	// Let systray take over the main thread.
+	// We shutdown the server when user clicks Exit in the systray menu.
+	onReady := func() {
+		systrayOnReady(fmt.Sprintf("http://localhost:%d", port))
+	}
+	onExit := func() {
+		if err := srv.Shutdown(context.TODO()); err != nil {
+			panic(err)
 		}
-		systray.Run(systrayOnReady, onExit)
-	}()
-
-	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
-	if err != nil {
-		log.Fatal(err)
 	}
-
-	Port = listener.Addr().(*net.TCPAddr).Port
-
-	// This runs after the socket starts listening, but before the blocking
-	// HTTP server actually starts.
-	if !flags.NoBrowser {
-		openInBrowser()
-	}
-
-	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, Port)
-	if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
-	}
+	systray.Run(onReady, onExit)
 }
