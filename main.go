@@ -486,6 +486,8 @@ func main() {
 
 	go func() {
 		onExit := func() {
+			blogfs.CleanupDjotbin()
+
 			// TODO: is it even safe to call srv.Shutdown() from another
 			// goroutine? Do I need to talk via channels?
 			if err := srv.Shutdown(context.TODO()); err != nil {

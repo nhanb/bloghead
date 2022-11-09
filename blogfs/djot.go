@@ -34,11 +34,9 @@ func djotToHtml(djotText string) template.HTML {
 // Writes the embeded djotbin executable into a temp file, overwriting any
 // existing file to make sure we always have the most up-to-date version.
 //
-// I would have preferred to os.CreateTemp() on startup and delete it on exit,
-// but I haven't figured out how to run cleanups after exiting an http server,
-// so this will have to do for now.
+// Caller must also call CleanupDjotbin() on shutdown.
 func CreateDjotbin() {
-	tmpDjotbinPath = path.Join(os.TempDir(), "djotbin")
+	tmpDjotbinPath = path.Join(os.TempDir(), "bloghead-djotbin")
 	if runtime.GOOS == "windows" {
 		// Windows wouldn't let me exec a file without an exe extension
 		tmpDjotbinPath += ".exe"
@@ -53,6 +51,11 @@ func CreateDjotbin() {
 	err = tmpFile.Chmod(fs.FileMode(0700))
 	check(err)
 	tmpDjotbinPath = tmpFile.Name()
+}
+
+// Remember to call this on shutdown!
+func CleanupDjotbin() {
+	os.Remove(tmpDjotbinPath)
 }
 
 func check(err error) {
