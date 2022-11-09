@@ -459,23 +459,34 @@ func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	var fNoBrowser bool
-	var fPort int
-	flag.BoolVar(&fNoBrowser, "nobrowser", false, "Don't automatically open browser on startup")
-	flag.IntVar(&fPort, "port", 0, "Editor server port")
+type Flags struct {
+	NoBrowser bool
+	Port      int
+	Args      []string
+}
+
+func processFlags() *Flags {
+	var f Flags
+	flag.BoolVar(&f.NoBrowser, "nobrowser", false, "Don't automatically open browser on startup")
+	flag.IntVar(&f.Port, "port", 0, "Editor server port")
 	flag.Parse()
-	args := flag.Args()
-	switch len(args) {
+	f.Args = flag.Args()
+
+	switch len(f.Args) {
 	case 0:
 		Paths.InputFile = "Site1.bloghead"
 	case 1:
-		Paths.InputFile = args[0]
+		Paths.InputFile = f.Args[0]
 	default:
 		fmt.Println("Usage: bloghead [filename]")
 		fmt.Println("  filename defaults to Site1.bloghead")
 		os.Exit(1)
 	}
+	return &f
+}
+
+func main() {
+	flags := processFlags()
 	// TODO: check if input file is a valid bloghead db
 
 	blogfs.CreateDjotbin()
@@ -497,7 +508,7 @@ func main() {
 		systray.Run(systrayOnReady, onExit)
 	}()
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", fPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -506,7 +517,7 @@ func main() {
 
 	// This runs after the socket starts listening, but before the blocking
 	// HTTP server actually starts.
-	if !fNoBrowser {
+	if !flags.NoBrowser {
 		openInBrowser()
 	}
 
