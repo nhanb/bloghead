@@ -7,7 +7,7 @@ run:
 	go run *.go
 
 watch:
-	find . -name '*.go' -or -name '*.tmpl' | entr -rc go run *.go -nobrowser
+	find . -name '*.go' -or -name '*.tmpl' | entr -rc go run *.go -nobrowser -port 8000
 
 watch-build:
 	find . -name '*.go' -or -name '*.tmpl' | entr -r go build

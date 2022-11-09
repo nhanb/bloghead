@@ -26,7 +26,7 @@ import (
 	"go.imnhan.com/bloghead/models"
 )
 
-const Port = 8000
+var Port int
 
 type PathDefs struct {
 	Home       string
@@ -461,7 +461,9 @@ func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var fNoBrowser bool
+	var fPort int
 	flag.BoolVar(&fNoBrowser, "nobrowser", false, "Don't automatically open browser on startup")
+	flag.IntVar(&fPort, "port", 0, "Editor server port")
 	flag.Parse()
 	args := flag.Args()
 	switch len(args) {
@@ -493,10 +495,12 @@ func main() {
 		systray.Run(systrayOnReady, onExit)
 	}()
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", Port))
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", fPort))
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	Port = listener.Addr().(*net.TCPAddr).Port
 
 	// This runs after the socket starts listening, but before the blocking
 	// HTTP server actually starts.
