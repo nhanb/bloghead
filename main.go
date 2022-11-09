@@ -302,22 +302,32 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		exportTo = r.FormValue("export-to")
 
-		if exportTo == "" {
-			errMsg = "Destination cannot be empty."
-		} else {
+		errMsg = func() string {
+			if exportTo == "" {
+				return "Destination cannot be empty."
+			}
+
 			if !filepath.IsAbs(exportTo) {
-				errMsg = fmt.Sprintf(
+				return fmt.Sprintf(
 					`Destination must be an absolute path. "%s" isn't one.`,
 					exportTo,
 				)
-			} else if _, err := os.Stat(exportTo); errors.Is(err, fs.ErrNotExist) {
-				w.WriteHeader(http.StatusBadRequest)
-				errMsg = fmt.Sprintf(
+			}
+
+			stat, err := os.Stat(exportTo)
+			if errors.Is(err, fs.ErrNotExist) {
+				return fmt.Sprintf(
 					`Folder "%s" does not exist. Create it first!`,
 					exportTo,
 				)
 			}
-		}
+
+			if !stat.IsDir() {
+				return fmt.Sprintf(`"%s" is not a folder.`, exportTo)
+			}
+
+			return ""
+		}()
 
 		if errMsg == "" {
 			err := Export(&bfs, exportTo)
@@ -330,6 +340,8 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 					time.Now().Format("3:04:05 PM"),
 				)
 			}
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}
 
@@ -356,7 +368,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 func Export(srcFs fs.FS, dest string) error {
 	dir, err := ioutil.ReadDir(dest)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	for _, d := range dir {
 		if err := os.RemoveAll(path.Join(dest, d.Name())); err != nil {
