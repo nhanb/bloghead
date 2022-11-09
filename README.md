@@ -1,6 +1,6 @@
 # Bloghead
 
-Linux build: [![builds.sr.ht status](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml.svg)](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml?)
+Linux & Windows builds: [![builds.sr.ht status](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml.svg)](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml?)
 
 Very early WIP.
 The goal is to eventually become a user-friendly static site generator that:
