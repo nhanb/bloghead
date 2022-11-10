@@ -1,22 +1,30 @@
+// Remember to call models.RegisterRegexFunc() before doing anything.
 package models
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
+
+	_ "embed"
 
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 )
 
+//go:embed schema.sql
+var initSQL string
+
 var db *sql.DB
 
-func Init() {
-	// Register REGEXP function using Go
-	// https://pkg.go.dev/github.com/mattn/go-sqlite3#hdr-Go_SQlite3_Extensions
+// https://pkg.go.dev/github.com/mattn/go-sqlite3#hdr-Go_SQlite3_Extensions
+func RegisterRegexFunc() {
 	regex := func(re, s string) (bool, error) {
 		return regexp.MatchString(re, s)
 	}
@@ -247,4 +255,36 @@ func processPostError(err error) error {
 	}
 
 	return err
+}
+
+func CreateDbFile(fullPath string) error {
+	dir := filepath.Dir(fullPath)
+	stat, err := os.Stat(dir)
+	if errors.Is(err, os.ErrNotExist) {
+		err := os.MkdirAll(dir, fs.FileMode(0755))
+		if err != nil {
+			return err
+		}
+	}
+
+	if !stat.IsDir() {
+		return errors.New(fmt.Sprintf(`"%s" is not a folder!`, dir))
+	}
+
+	db, err = sql.Open("sqlite3_extended", fullPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	_, err = db.Exec(initSQL)
+	if err != nil {
+		return fmt.Errorf("create initial db: %s", err)
+	}
+
+	return nil
+}
+
+func Close() error {
+	return db.Close()
 }

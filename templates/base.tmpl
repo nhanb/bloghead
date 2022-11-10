@@ -95,6 +95,7 @@
   </head>
 
   <body>
+    {{if .Paths.InputFile}}
     <nav>
     <ul>
         <li><a href="{{.Paths.Home}}">Posts</a></li>
@@ -106,6 +107,7 @@
         <li>Editing <b>{{.Paths.InputFileName}}</b></li>
     </ul>
     </nav>
+    {{end}}
 
     {{template "body" .}}
   </body>

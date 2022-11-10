@@ -18,7 +18,7 @@ func main() {
 	seeds, err := filepath.Glob("seed-data/*.seed")
 	check(err)
 
-	models.Init()
+	models.RegisterRegexFunc()
 	models.SetDbFile("Site1.bloghead")
 
 	for _, seed := range seeds {

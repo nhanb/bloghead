@@ -7,14 +7,15 @@ run:
 	go run *.go
 
 watch:
-	find . -name '*.go' -or -name '*.tmpl' | entr -rc go run *.go -nobrowser
+	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile | entr -rc -s\
+		"go build && ./bloghead -nobrowser"
 
 watch-build:
 	find . -name '*.go' -or -name '*.tmpl' | entr -r go build
 
 init-db:
 	rm -f Site1.bloghead
-	sqlite3 Site1.bloghead < schema.sql
+	sqlite3 Site1.bloghead < models/schema.sql
 	go run ./cmd/seed
 
 clean:

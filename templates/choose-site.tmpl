@@ -1,31 +1,24 @@
-{{define "title"}}Export{{end}}
+{{define "title"}}Choose site{{end}}
 
 {{define "body"}}
-<h1>Export</h1>
+<h1>Choose site</h1>
 
 <p style="max-width: 500px;">
-Export your blog into a folder of static HTML and assets,
-ready to be uploaded onto any static web hosting service.
+Enter full path of an existing <code>.bloghead</code> file to edit.<br />
+If the file does not exist, we'll create a new one.
 </p>
 
-<form action="{{.Paths.Export}}" method="post" id="export-form">
-
-  <label for="export-to">
-    <b>Destination:</b><br />
-    <span style="color:grey">needs to exist first</span>
-    <input type="text" name="export-to" id="export-to" value="{{.ExportTo}}"
-        placeholder="Example: {{.Placeholder}}" required />
+<form action="{{.Paths.ChooseSite}}" method="post">
+  <label for="full-path">
+    <b>Full path:</b><br />
+    <input type="text" name="full-path" id="full-path" required
+        placeholder="Example: {{.Placeholder}}" value="{{.FullPath}}" />
   </label>
+
   {{.CsrfTag}}
 
-  <p style="color:chocolate; margin:0;">
-    <strong>Warning:</strong>
-    exporting will erase all existing data in destination folder.
-  </p>
-
   <div>
-    <input type="submit" value="Export" />
-    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    <input type="submit" value="Submit" />
     {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
 </form>
@@ -55,12 +48,5 @@ ready to be uploaded onto any static web hosting service.
         }
     });
 })();
-
-document.getElementById("export-form").addEventListener("submit", function(e) {
-    if (!window.confirm("The destination folder will be overwritten. Are you sure?")) {
-        e.preventDefault();
-    }
-});
-
 </script>
 {{end}}

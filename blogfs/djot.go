@@ -2,6 +2,7 @@ package blogfs
 
 import (
 	_ "embed"
+	"fmt"
 	"html/template"
 	"io"
 	"io/fs"
@@ -53,6 +54,7 @@ func CreateDjotbin() (cleanup func()) {
 	tmpDjotbinPath = tmpFile.Name()
 
 	return func() {
+		fmt.Println("Cleaning up")
 		os.Remove(tmpDjotbinPath)
 	}
 }
