@@ -459,7 +459,7 @@ type Flags struct {
 func processFlags() *Flags {
 	var f Flags
 	flag.BoolVar(&f.NoBrowser, "nobrowser", false, "Don't automatically open browser on startup")
-	flag.IntVar(&f.Port, "port", 0, "Editor server port")
+	flag.IntVar(&f.Port, "port", 4466, "Editor server port")
 	flag.Parse()
 	f.Args = flag.Args()
 
@@ -476,7 +476,9 @@ func processFlags() *Flags {
 	return &f
 }
 
-func startHttpServer(flags *Flags, portChan chan int) *http.Server {
+// Sets up and starts http server in a separate goroutine.
+// Returns server handle so we can call Shutdown() on it when needed.
+func startHttpServer(listener *net.Listener) *http.Server {
 	srv := &http.Server{}
 	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc(Paths.Home, homeHandler)
@@ -494,23 +496,7 @@ func startHttpServer(flags *Flags, portChan chan int) *http.Server {
 	http.HandleFunc(Paths.ChangeSite, changeSiteHandler)
 
 	go func() {
-		listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		port := listener.Addr().(*net.TCPAddr).Port
-		portChan <- port
-		close(portChan)
-
-		// This must run after the socket starts listening, but before the
-		// blocking HTTP server actually starts.
-		if !flags.NoBrowser {
-			openInBrowser(fmt.Sprintf("http://localhost:%d", port))
-		}
-
-		fmt.Printf("Serving %s on port %d\n", Paths.InputFile, port)
-		if err := srv.Serve(listener); !errors.Is(err, http.ErrServerClosed) {
+		if err := srv.Serve(*listener); !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal(err)
 		}
 	}()
@@ -522,23 +508,31 @@ func main() {
 	flags := processFlags()
 	// TODO: check if input file is a valid bloghead db
 
+	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
+	if err != nil {
+		// Most likely this means port is already in use because there's
+		// already a running instance, so let's bail out early.
+		log.Fatal(err)
+	}
+
 	models.Init()
 	models.SetDbFile(Paths.InputFile)
 
 	cleanUpDjotbin := blogfs.CreateDjotbin()
 	defer cleanUpDjotbin()
 
-	// We don't know what port we get until we actually start the server, but
-	// the server starts asynchronously, so we need a channel here to wait
-	// until we get back the actual port.
-	portChan := make(chan int)
-	srv := startHttpServer(flags, portChan)
-	port := <-portChan
+	// This must run after the socket starts listening
+	if !flags.NoBrowser {
+		openInBrowser(fmt.Sprintf("http://localhost:%d", flags.Port))
+	}
+
+	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, flags.Port)
+	srv := startHttpServer(&listener)
 
 	// Let systray take over the main thread.
 	// We shutdown the server when user clicks Exit in the systray menu.
 	onReady := func() {
-		systrayOnReady(fmt.Sprintf("http://localhost:%d", port))
+		systrayOnReady(fmt.Sprintf("http://localhost:%d", flags.Port))
 	}
 	onExit := func() {
 		if err := srv.Shutdown(context.TODO()); err != nil {
