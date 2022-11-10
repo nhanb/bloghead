@@ -50,7 +50,9 @@
       }
       nav ul li {
         display: inline-block;
-        margin: 0 1rem 0 0;
+      }
+      nav ul li + li {
+        margin-left: 1rem;
       }
 
       /* Standard forms stuff */
@@ -101,7 +103,7 @@
         <li><a href="{{.Paths.Preview}}" target="_blank">Preview site↗</a></li>
     </ul>
     <ul style="float:right;">
-        <li>Editing <b>{{.Paths.InputFileName}}</b> — <a href="{{.Paths.ChangeSite}}">Change site</a></li>
+        <li>Editing <b>{{.Paths.InputFileName}}</b></li>
     </ul>
     </nav>
 

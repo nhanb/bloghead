@@ -27,13 +27,12 @@ import (
 )
 
 type PathDefs struct {
-	Home       string
-	Settings   string
-	NewPost    string
-	EditPost   string
-	Preview    string
-	Export     string
-	ChangeSite string
+	Home     string
+	Settings string
+	NewPost  string
+	EditPost string
+	Preview  string
+	Export   string
 
 	InputFile string
 }
@@ -46,13 +45,12 @@ func (p PathDefs) InputFileName() string {
 }
 
 var Paths = PathDefs{
-	Home:       "/",
-	Settings:   "/settings",
-	NewPost:    "/new",
-	EditPost:   "/edit/",
-	Preview:    "/preview/",
-	Export:     "/export",
-	ChangeSite: "/change",
+	Home:     "/",
+	Settings: "/settings",
+	NewPost:  "/new",
+	EditPost: "/edit/",
+	Preview:  "/preview/",
+	Export:   "/export",
 }
 
 //go:embed templates
@@ -65,12 +63,11 @@ var favicon []byte
 var faviconpng []byte
 
 type Templates struct {
-	Home       *template.Template
-	Settings   *template.Template
-	NewPost    *template.Template
-	EditPost   *template.Template
-	Export     *template.Template
-	ChangeSite *template.Template
+	Home     *template.Template
+	Settings *template.Template
+	NewPost  *template.Template
+	EditPost *template.Template
+	Export   *template.Template
 }
 
 var tmpls = Templates{
@@ -98,11 +95,6 @@ var tmpls = Templates{
 		tmplsFS,
 		"templates/base.tmpl",
 		"templates/export.tmpl",
-	)),
-	ChangeSite: template.Must(template.ParseFS(
-		tmplsFS,
-		"templates/base.tmpl",
-		"templates/change-site.tmpl",
 	)),
 }
 
@@ -413,43 +405,6 @@ func Export(srcFs fs.FS, dest string) error {
 	return err
 }
 
-func changeSiteHandler(w http.ResponseWriter, r *http.Request) {
-	csrfTag := CsrfCheck(w, r)
-	if csrfTag == "" {
-		return
-	}
-
-	var site *models.Site
-	var msg string
-
-	switch r.Method {
-	case "GET":
-		site = models.QuerySite()
-	case "POST":
-		site = &models.Site{
-			Title:   r.FormValue("title"),
-			Tagline: r.FormValue("tagline"),
-		}
-		site.Update()
-		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
-	}
-
-	err := tmpls.ChangeSite.Execute(w, struct {
-		Site    models.Site
-		Paths   PathDefs
-		CsrfTag template.HTML
-		Msg     string
-	}{
-		Site:    *site,
-		Paths:   Paths,
-		CsrfTag: csrfTag,
-		Msg:     msg,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 type Flags struct {
 	NoBrowser bool
 	Port      int
@@ -493,7 +448,6 @@ func startHttpServer(listener *net.Listener) *http.Server {
 		),
 	)
 	http.HandleFunc(Paths.Export, exportHandler)
-	http.HandleFunc(Paths.ChangeSite, changeSiteHandler)
 
 	go func() {
 		if err := srv.Serve(*listener); !errors.Is(err, http.ErrServerClosed) {
