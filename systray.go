@@ -28,7 +28,13 @@ func openInBrowser(url string) error {
 }
 
 func systrayOnReady(url string) {
-	systray.SetTemplateIcon(faviconpng, faviconpng)
+	// Windows only takes ICO, while Linux takes PNG.
+	// Getting this wrong causes an empty systray icon.
+	if runtime.GOOS == "windows" {
+		systray.SetTemplateIcon(favicon, favicon)
+	} else {
+		systray.SetTemplateIcon(faviconpng, faviconpng)
+	}
 
 	tooltip := fmt.Sprintf("Bloghead is live at %s", url)
 	systray.SetTitle(tooltip)
