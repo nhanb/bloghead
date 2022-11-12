@@ -25,5 +25,5 @@ clean:
 bloghead.exe:
 	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows go build
 
-blogfs/djot.lua: djot/* vendor-djot.lua
-	lua vendor-djot.lua > blogfs/djot.lua
+blogfs/djot.lua: djot/* cmd/vendordjot/*
+	go run ./cmd/vendordjot
