@@ -608,9 +608,6 @@ func main() {
 	models.SetDbFile(Paths.InputFile)
 	defer models.Close()
 
-	cleanUpDjotbin := blogfs.CreateDjotbin()
-	defer cleanUpDjotbin()
-
 	fullyInitialized <- struct{}{}
 
 	handleAllPaths(srv)

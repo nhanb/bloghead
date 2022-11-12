@@ -21,23 +21,28 @@ architectureastronomyphobia.
 Current dev dependencies:
 
 - [go](https://go.dev/)
-- [entr](https://eradman.com/entrproject/): for `make watch`
-- [luastatic](https://github.com/ers35/luastatic): to compile djot - I
-  installed it using luarocks.
-- [mingw-w64](https://archlinux.org/groups/x86_64/mingw-w64/): to cross-compile
-  from Linux to Windows.
+- (optional) [entr](https://eradman.com/entrproject/): for `make watch`
+- (optional) [mingw-w64](https://archlinux.org/groups/x86_64/mingw-w64/): to
+  cross-compile from Linux to Windows.
+
+I've been developing mainly on Arch Linux, but the CI builds work on Debian 9
+("stretch") to ensure maximum glibc compatibiliy. Also cross-compiles to
+Windows just fine. MacOS is TODO.
 
 ```sh
-# run these once:
-git submodule update --init --recursive --remote  # pull djot submodule
-make blogfs/djotbin
 make init-db
-
 make watch
 ```
 
 Things are especially messy right now. Proper desktop-friendly distribution
 will be done once core features are in place.
+
+## Update vendored djot lua script
+
+```sh
+cd djot && git pull && cd ..
+make blogfs/djot.lua
+```
 
 ## Local build container
 

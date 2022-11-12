@@ -23,7 +23,7 @@
   </label>
   <label for="slug">
     <span class="label-text">Slug:</span><br />
-    <span style="color:grey; font-style:italic">
+    <span class="hint">
         only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed
     </span><br />
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
@@ -31,7 +31,7 @@
   </label>
   <label for="content">
     <span class="label-text">Content:</span><br />
-    <span style="color:grey; font-style:italic">
+    <span class="hint">
     we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax which is a more
     well-defined Markdown variant - here's a
     <a tabindex="-1" href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
@@ -52,5 +52,15 @@
 
     {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
+
+  <style>
+  .hint {
+    color: grey;
+    font-size: 0.9rem;
+  }
+  .hint a {
+    color: inherit;
+  }
+  </style>
 </form>
 {{end}}
