@@ -58,3 +58,8 @@ docker run --rm -it bloghead bash
 ## Linux desktop integration
 
 They're in the `./freedesktop/` dir. Try `stow freedesktop`.
+
+# Prior art
+
+[Lektor](https://www.getlektor.com/) is a heavy inspiration, but doesn't go far
+enough to accommodate non-developers IMHO.
