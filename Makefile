@@ -20,10 +20,14 @@ init-db:
 	go run ./cmd/seed
 
 clean:
-	rm -rf www Site1.bloghead bloghead bloghead.exe
+	rm -rf www Site1.bloghead bloghead bloghead.exe vendordjot seed
 
 bloghead.exe:
 	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows go build
 
 blogfs/djot.lua: djot/* cmd/vendordjot/*
 	go run ./cmd/vendordjot
+
+bloghead.syso: favicon.ico
+	# needs `go install github.com/akavel/rsrc@latest`
+	~/go/bin/rsrc -ico favicon.ico -o bloghead.syso
