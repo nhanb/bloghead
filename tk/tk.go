@@ -25,31 +25,28 @@ const ActionCancel Action = "cancel"
 //go:embed scripts/choose-action.tcl
 var chooseActionScript string
 
-//go:embed scripts/get-open-file.tcl
-var openFileScript string
-
-//go:embed scripts/get-save-file.tcl
-var createFileScript string
-
 // Shows a window asking user to create new or open existing .bloghead file.
-func ChooseAction() Action {
-	action := Action(strings.TrimSpace(execTcl(chooseActionScript)))
-	switch action {
-	case ActionCreateFile:
-	case ActionOpenFile:
-	case ActionCancel:
-	default:
+// Returns resulted action and, in case of "create" or "open", the full path of
+// the selected file.
+func ChooseAction() (action Action, filePath string) {
+	result := strings.TrimSpace(execTcl(chooseActionScript))
+	// This tcl script prints 2 lines: action and filePath.
+	// If user closes the window, it prints nothing.
+
+	if result == "" {
+		return Action("cancel"), ""
+	}
+
+	lines := strings.SplitN(result, "\n", 2)
+	if len(lines) != 2 {
+		log.Fatalf("Bogus ChooseAction script output:\n---\n%s\n---\n", result)
+	}
+
+	action, filePath = Action(lines[0]), lines[1]
+	if action != ActionCreateFile && action != ActionOpenFile {
 		log.Fatalf("Invalid action: %s", action)
 	}
-	return action
-}
-
-func OpenFile() string {
-	return execTcl(openFileScript)
-}
-
-func CreateFile() string {
-	return execTcl(createFileScript)
+	return action, filePath
 }
 
 // Executes tcl script, returns stdout

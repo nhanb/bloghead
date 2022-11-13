@@ -476,28 +476,24 @@ func main() {
 		cleanup := tk.CreateTclBin()
 		defer cleanup()
 
-		for Paths.InputFile == "" {
-			action := tk.ChooseAction()
-			println("Action:", action)
+		action, filePath := tk.ChooseAction()
+		println("Action:", action, filePath)
 
-			switch action {
-			case tk.ActionOpenFile:
-				Paths.InputFile = tk.OpenFile()
-			case tk.ActionCreateFile:
-				Paths.InputFile = tk.CreateFile()
-				if Paths.InputFile == "" {
-					continue
-				}
-				if !strings.HasSuffix(Paths.InputFile, ".bloghead") {
-					Paths.InputFile += ".bloghead"
-				}
-				e := models.CreateDbFile(Paths.InputFile)
-				if e != nil {
-					log.Fatalf("create blog file: %s", e)
-				}
-			case tk.ActionCancel:
-				return
+		switch action {
+		case tk.ActionCancel:
+			return
+		case tk.ActionOpenFile:
+			Paths.InputFile = filePath
+		case tk.ActionCreateFile:
+			if !strings.HasSuffix(filePath, ".bloghead") {
+				filePath += ".bloghead"
 			}
+			_ = os.Remove(filePath)
+			e := models.CreateDbFile(filePath)
+			if e != nil {
+				log.Fatalf("create blog file: %s", e)
+			}
+			Paths.InputFile = filePath
 		}
 	}
 
