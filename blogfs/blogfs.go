@@ -122,12 +122,10 @@ func postFile(p *models.Post, site *models.Site) fs.File {
 }
 
 type blogFile struct {
-	name    string
-	content []byte
-	offset  int64
-	isDir   bool
-
-	children       []fs.DirEntry
+	name           string
+	content        []byte
+	offset         int64
+	isDir          bool
 	childrenOffset int64
 }
 
@@ -135,7 +133,8 @@ func (f *blogFile) Stat() (fs.FileInfo, error) {
 	return f, nil
 }
 
-// TODO: implement pagination
+// TODO: optimize pagination. Currently if caller makes use of the "n" param
+// then we'll be querying the same thing on each iteration.
 func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
 	if !f.isDir {
 		return nil, errors.New(fmt.Sprintf("%s is a file, not a dir!", f.name))
@@ -153,7 +152,16 @@ func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
 
 	children = append(children, &blogFile{name: "index.html", isDir: false})
 
-	return children, nil
+	if n == -1 {
+		return children, nil
+	}
+
+	returnVal := children[f.childrenOffset:n]
+	f.childrenOffset += int64(n)
+	if f.childrenOffset >= int64(len(children)) {
+		f.childrenOffset = 0
+	}
+	return returnVal, nil
 }
 
 func (bf *blogFile) Read(buf []byte) (int, error) {
