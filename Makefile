@@ -16,7 +16,7 @@ run:
 watch:
 	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile \
 		| entr -rc -s \
-		"go build -o dist/ && ./dist/bloghead -nobrowser Site1.bloghead"
+		"go build -o dist/ && ./dist/bloghead -nobrowser"
 
 watch-build:
 	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile \
@@ -28,7 +28,7 @@ init-db:
 	go run ./cmd/seed
 
 clean:
-	rm -rf dist/* www Site1.bloghead bloghead bloghead.exe vendordjot seed
+	rm -rf dist/* www *.bloghead bloghead bloghead.exe vendordjot seed
 
 blogfs/djot.lua: djot/* cmd/vendordjot/*
 	go run ./cmd/vendordjot

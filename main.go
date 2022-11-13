@@ -26,16 +26,16 @@ import (
 	"fyne.io/systray"
 	"go.imnhan.com/bloghead/blogfs"
 	"go.imnhan.com/bloghead/models"
+	"go.imnhan.com/bloghead/tk"
 )
 
 type PathDefs struct {
-	ChooseSite string
-	Home       string
-	Settings   string
-	NewPost    string
-	EditPost   string
-	Preview    string
-	Export     string
+	Home     string
+	Settings string
+	NewPost  string
+	EditPost string
+	Preview  string
+	Export   string
 
 	InputFile string
 }
@@ -48,13 +48,12 @@ func (p PathDefs) InputFileName() string {
 }
 
 var Paths = PathDefs{
-	ChooseSite: "/choose-site",
-	Home:       "/",
-	Settings:   "/settings",
-	NewPost:    "/new",
-	EditPost:   "/edit/",
-	Preview:    "/preview/",
-	Export:     "/export",
+	Home:     "/",
+	Settings: "/settings",
+	NewPost:  "/new",
+	EditPost: "/edit/",
+	Preview:  "/preview/",
+	Export:   "/export",
 }
 
 //go:embed templates
@@ -67,20 +66,14 @@ var favicon []byte
 var faviconpng []byte
 
 type Templates struct {
-	ChooseSite *template.Template
-	Home       *template.Template
-	Settings   *template.Template
-	NewPost    *template.Template
-	EditPost   *template.Template
-	Export     *template.Template
+	Home     *template.Template
+	Settings *template.Template
+	NewPost  *template.Template
+	EditPost *template.Template
+	Export   *template.Template
 }
 
 var tmpls = Templates{
-	ChooseSite: template.Must(template.ParseFS(
-		tmplsFS,
-		"templates/base.tmpl",
-		"templates/choose-site.tmpl",
-	)),
 	Home: template.Must(template.ParseFS(
 		tmplsFS,
 		"templates/base.tmpl",
@@ -113,84 +106,6 @@ var bfs blogfs.BlogFS = blogfs.BlogFS{}
 func faviconHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(favicon)
-}
-
-// TODO: it's probably cleaner to have 2 separate forms for create & edit
-func chooseSiteHandler(w http.ResponseWriter, r *http.Request) {
-	if Paths.InputFile != "" {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-
-	csrfTag := CsrfCheck(w, r)
-	if csrfTag == "" {
-		return
-	}
-
-	var errMsg string
-	var fullPath string
-
-	if r.Method == "POST" {
-		fullPath = r.FormValue("full-path")
-
-		if !strings.HasSuffix(fullPath, ".bloghead") {
-			fullPath += ".bloghead"
-		}
-
-		errMsg = func() string {
-			if fullPath == "" {
-				return "Full path cannot be empty."
-			}
-
-			if !filepath.IsAbs(fullPath) {
-				return fmt.Sprintf(`"%s" is not an absolute path.`, fullPath)
-			}
-
-			stat, err := os.Stat(fullPath)
-			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) {
-					e := models.CreateDbFile(fullPath)
-					if e != nil {
-						return e.Error()
-					}
-					fileNameInput <- fullPath
-					// don't go to full site until main()'s initializations have
-					// completed:
-					<-fullyInitialized
-					http.Redirect(w, r, "/", http.StatusSeeOther)
-					return ""
-				}
-				return err.Error()
-			}
-
-			if !stat.IsDir() {
-				fileNameInput <- fullPath
-				// don't go to full site until main()'s initializations have
-				// completed:
-				<-fullyInitialized
-				http.Redirect(w, r, "/", http.StatusSeeOther)
-			}
-
-			return ""
-		}()
-	}
-
-	err := tmpls.ChooseSite.Execute(w, struct {
-		CsrfTag     template.HTML
-		Paths       PathDefs
-		Placeholder string
-		ErrMsg      string
-		FullPath    string
-	}{
-		Paths:       Paths,
-		CsrfTag:     csrfTag,
-		Placeholder: sitePathExample,
-		ErrMsg:      errMsg,
-		FullPath:    fullPath,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -521,6 +436,7 @@ func processFlags() *Flags {
 }
 
 func handleAllPaths(srv *http.Server) {
+	http.HandleFunc("/favicon.ico", faviconHandler)
 	http.HandleFunc(Paths.Home, homeHandler)
 	http.HandleFunc(Paths.Settings, settingsHandler)
 	http.HandleFunc(Paths.NewPost, newPostHandler)
@@ -534,9 +450,6 @@ func handleAllPaths(srv *http.Server) {
 	)
 	http.HandleFunc(Paths.Export, exportHandler)
 }
-
-var fileNameInput = make(chan string, 1)
-var fullyInitialized = make(chan struct{}, 1)
 
 func main() {
 	flags := processFlags()
@@ -553,12 +466,45 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// First setup a bare minimum http server that only serves the
-	// "choose site" page.
+	// Needs to go before any sqlite is executed.
+	// Putting this here before the potential "create db" flow.
+	models.RegisterRegexFunc()
+
+	// If bloghead was called without a filename argument, we open a
+	// tk window letting them choose between opening and creating a site.
+	if Paths.InputFile == "" {
+		cleanup := tk.CreateTclBin()
+		defer cleanup()
+
+		for Paths.InputFile == "" {
+			action := tk.ChooseAction()
+			println("Action:", action)
+
+			switch action {
+			case tk.ActionOpenFile:
+				Paths.InputFile = tk.OpenFile()
+			case tk.ActionCreateFile:
+				Paths.InputFile = tk.CreateFile()
+				if Paths.InputFile == "" {
+					continue
+				}
+				if !strings.HasSuffix(Paths.InputFile, ".bloghead") {
+					Paths.InputFile += ".bloghead"
+				}
+				e := models.CreateDbFile(Paths.InputFile)
+				if e != nil {
+					log.Fatalf("create blog file: %s", e)
+				}
+			case tk.ActionCancel:
+				return
+			}
+		}
+	}
+
+	// Start http server
 	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, flags.Port)
 	srv := &http.Server{}
-	http.HandleFunc("/favicon.ico", faviconHandler)
-	http.HandleFunc(Paths.ChooseSite, chooseSiteHandler)
+	handleAllPaths(srv)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -567,7 +513,7 @@ func main() {
 		}
 	}()
 
-	// Start the systray too!
+	// Start systray too!
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -579,38 +525,12 @@ func main() {
 			if err := srv.Shutdown(context.TODO()); err != nil {
 				panic(err)
 			}
-			// If user clicks "Quit" before choosing a site, then send a value
-			// to the channel here to unblock the main flow.
-			fileNameInput <- ""
 		}
 		systray.Run(onReady, onExit)
 	}()
 
-	// Needs to go before any sqlite is executed.
-	// Putting this here before the potential "create db" flow.
-	models.RegisterRegexFunc()
-
-	// If bloghead was called without a filename argument, we open the
-	// "choose site" page and block there until user provides a valid one.
-	if Paths.InputFile == "" {
-		if !flags.NoBrowser {
-			openInBrowser(fmt.Sprintf("http://localhost:%d%s", flags.Port, Paths.ChooseSite))
-		}
-		flags.NoBrowser = true // since we now already have one open
-		Paths.InputFile = <-fileNameInput
-		if Paths.InputFile == "" {
-			// happens when user clicks "quit" on the systray before actually
-			// choosing a site, in which case let's just quit.
-			return
-		}
-	}
-
 	models.SetDbFile(Paths.InputFile)
 	defer models.Close()
-
-	fullyInitialized <- struct{}{}
-
-	handleAllPaths(srv)
 
 	// This must run after the socket starts listening
 	if !flags.NoBrowser {
