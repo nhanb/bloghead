@@ -1,4 +1,4 @@
-.PHONY : build linux windows run watch watch-build init-db clean
+.PHONY : build linux windows run watch watch-build init-db clean watch-tk
 
 build:
 	go build -o dist/
@@ -21,6 +21,10 @@ watch:
 watch-build:
 	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile \
 		| entr -r go build -o dist/
+
+watch-tk:
+	find . -name '*.tcl' | entr -rc -s \
+		"tclsh tk/scripts/choose-action.tcl"
 
 init-db:
 	rm -f Site1.bloghead
