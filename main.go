@@ -455,10 +455,6 @@ func main() {
 	flags := processFlags()
 	// TODO: check if input file is a valid bloghead db
 
-	// Use this to wait till both webserver and systray goroutines have
-	// finished.
-	var wg sync.WaitGroup
-
 	listener, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", flags.Port))
 	if err != nil {
 		// Most likely this means port is already in use because there's
@@ -470,8 +466,8 @@ func main() {
 	// Putting this here before the potential "create db" flow.
 	models.RegisterRegexFunc()
 
-	// If bloghead was called without a filename argument, we open a
-	// tk window letting them choose between opening and creating a site.
+	// If bloghead was called without a filename argument, open a
+	// tk window letting user choose between opening and creating a site.
 	if Paths.InputFile == "" {
 		cleanup := tk.CreateTclBin()
 		defer cleanup()
@@ -497,6 +493,9 @@ func main() {
 		}
 	}
 
+	// Use this to wait for both webserver and systray goroutines to finish
+	var wg sync.WaitGroup
+
 	// Start http server
 	fmt.Printf("Serving %s on port %d\n", Paths.InputFile, flags.Port)
 	srv := &http.Server{}
@@ -516,7 +515,7 @@ func main() {
 		onReady := func() {
 			systrayOnReady(fmt.Sprintf("http://localhost:%d", flags.Port))
 		}
-		// We shutdown the server when user clicks Exit in the systray menu.
+		// Shutdown server when user clicks Exit in systray menu.
 		onExit := func() {
 			if err := srv.Shutdown(context.TODO()); err != nil {
 				panic(err)
@@ -528,7 +527,8 @@ func main() {
 	models.SetDbFile(Paths.InputFile)
 	defer models.Close()
 
-	// This must run after the socket starts listening
+	// This must run after the socket starts listening,
+	// otherwise we risk opening an empty page.
 	if !flags.NoBrowser {
 		openInBrowser(fmt.Sprintf("http://localhost:%d", flags.Port))
 	}

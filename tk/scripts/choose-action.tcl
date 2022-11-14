@@ -12,16 +12,14 @@ ttk::label .c.label -text {Would you like to create a new blog, or open an exist
 ttk::button .c.createBtn -text "Create..." -padding 5 -command {
     set filename [tk_getSaveFile -title "Create" -filetypes $types]
     if {$filename != ""} {
-        puts "create"
-        puts $filename
+        puts "create ${filename}"
         exit
     }
 }
 ttk::button .c.openBtn -text "Open..." -padding 5 -command {
     set filename [tk_getOpenFile -filetypes $types]
     if {$filename != ""} {
-        puts "open"
-        puts $filename
+        puts "open ${filename}"
         exit
     }
 }

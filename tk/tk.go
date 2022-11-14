@@ -18,9 +18,26 @@ var tmpTclPath string
 
 type Action string
 
-const ActionCreateFile Action = "create"
-const ActionOpenFile Action = "open"
-const ActionCancel Action = "cancel"
+const (
+	ActionCreateFile Action = "create"
+	ActionOpenFile          = "open"
+	ActionCancel            = "cancel"
+)
+
+func stringToAction(s string) Action {
+	a := Action(s)
+	switch a {
+	case ActionCreateFile:
+		return a
+	case ActionOpenFile:
+		return a
+	case ActionCancel:
+		return a
+	default:
+		log.Fatalf("invalid action string: %s", s)
+		return ""
+	}
+}
 
 //go:embed scripts/choose-action.tcl
 var chooseActionScript string
@@ -30,23 +47,19 @@ var chooseActionScript string
 // the selected file.
 func ChooseAction() (action Action, filePath string) {
 	result := strings.TrimSpace(execTcl(chooseActionScript))
-	// This tcl script prints 2 lines: action and filePath.
+	// This tcl script prints "<action><space><filepath>".
 	// If user closes the window, it prints nothing.
 
 	if result == "" {
-		return Action("cancel"), ""
+		return ActionCancel, ""
 	}
 
-	lines := strings.SplitN(result, "\n", 2)
-	if len(lines) != 2 {
+	parts := strings.SplitN(result, " ", 2)
+	if len(parts) != 2 {
 		log.Fatalf("Bogus ChooseAction script output:\n---\n%s\n---\n", result)
 	}
 
-	action, filePath = Action(lines[0]), lines[1]
-	if action != ActionCreateFile && action != ActionOpenFile {
-		log.Fatalf("Invalid action: %s", action)
-	}
-	return action, filePath
+	return stringToAction(parts[0]), parts[1]
 }
 
 // Executes tcl script, returns stdout
