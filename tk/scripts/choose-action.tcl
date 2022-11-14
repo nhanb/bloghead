@@ -46,3 +46,15 @@ grid .c.createBtn -column 0 -row 1 -padx 10
 grid .c.openBtn -column 1 -row 1 -padx 10
 
 tk::PlaceWindow . center
+
+# By default this window is not focused and not even brought to foreground
+# on Windows. I suspect it's because tcl is exec'ed from bloghead.exe.
+#
+# This workaround snippet from tcl wiki brings our tk window on top of
+# other windows but still can't focus on it. Not ideal but at least it's
+# less confusing.
+# https://wiki.tcl-lang.org/page/raise
+focus -force .
+raise .
+wm attribute . -topmost 1
+wm attribute . -topmost 0
