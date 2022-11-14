@@ -84,15 +84,25 @@ func execTcl(script string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// Writes the embeded tcl executable into a temp file, overwriting any
-// existing file to make sure we always have the most up-to-date version.
-//
-// Returns a cleanup function that caller must then call on shutdown.
-func CreateTclBin() (cleanup func()) {
+// Writes the embeded tcl executable into a temp file.
+// If file already exists with correct size, do nothing.
+func EnsureTclBin() {
 	tmpTclPath = path.Join(os.TempDir(), "bloghead-tcl")
 	if runtime.GOOS == "windows" {
 		// Windows wouldn't let me exec a file without an exe extension
 		tmpTclPath += ".exe"
+	}
+
+	info, err := os.Stat(tmpTclPath)
+	if err == nil && !info.IsDir() {
+		// Since the file name is already prefixed with "bloghead-", it's
+		// practically impossible for any other file to accidentally exist
+		// under the same name _and_ size. Saves us some CPU cycles (and more
+		// importantly, startup time) for skipping checksum.
+		if info.Size() == int64(len(tclbin)) {
+			fmt.Println("Found existing", tmpTclPath)
+			return
+		}
 	}
 
 	os.Remove(tmpTclPath)
@@ -111,9 +121,4 @@ func CreateTclBin() (cleanup func()) {
 	}
 	tmpTclPath = tmpFile.Name()
 	fmt.Println("Created", tmpTclPath)
-
-	return func() {
-		os.Remove(tmpTclPath)
-		fmt.Println("Removed", tmpTclPath)
-	}
 }
