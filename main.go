@@ -9,7 +9,6 @@ import (
 	"html/template"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -363,7 +362,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 // Erases dest dir then copies everything from srcFS into dest.
 // It assumes dest dir already exists.
 func Export(srcFs fs.FS, dest string) error {
-	dir, err := ioutil.ReadDir(dest)
+	dir, err := os.ReadDir(dest)
 	if err != nil {
 		return err
 	}
@@ -373,7 +372,7 @@ func Export(srcFs fs.FS, dest string) error {
 		}
 	}
 
-	err = fs.WalkDir(srcFs, ".", func(path string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(srcFs, ".", func(path string, d fs.DirEntry, e error) error {
 		if path == "." {
 			return nil
 		}
