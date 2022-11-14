@@ -1,6 +1,6 @@
 package require Tk
+
 wm title . "Create or Open?"
-tk::PlaceWindow . center
 ttk::style theme use clam
 
 set types {
@@ -28,3 +28,5 @@ grid .c -column 0 -row 0
 grid .c.label -column 0 -row 0 -columnspan 2 -pady "0 10"
 grid .c.createBtn -column 0 -row 1 -padx 10
 grid .c.openBtn -column 1 -row 1 -padx 10
+
+tk::PlaceWindow . center
