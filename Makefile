@@ -14,12 +14,12 @@ run:
 	go run *.go
 
 watch:
-	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile \
+	find . -name '*.go' -or -name '*.tmpl' -or -name '*.tcl' \
 		| entr -rc -s \
-		"go build -o dist/ && ./dist/bloghead -nobrowser"
+		"go build -o dist/ && ./dist/bloghead -nobrowser Site1.bloghead"
 
 watch-build:
-	find . -name '*.go' -or -name '*.tmpl' -or -name Makefile \
+	find . -name '*.go' -or -name '*.tmpl' -or -name '*.tcl' \
 		| entr -r go build -o dist/
 
 watch-tk:

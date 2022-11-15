@@ -71,6 +71,15 @@ func execTcl(script string) string {
 		panic(err)
 	}
 
+	if runtime.GOOS == "windows" {
+		// By default this window is not focused and not even brought to
+		// foreground on Windows. I suspect it's because tcl is exec'ed from
+		// bloghead.exe. Minimizing then re-opening it seems to do the trick.
+		// This workaround, however, makes the window unfocused on KDE, so
+		// let's only use it on Windows.
+		script += "\nwm iconify .\nwm deiconify .\n"
+	}
+
 	go func() {
 		defer stdin.Close()
 		io.WriteString(stdin, script)
