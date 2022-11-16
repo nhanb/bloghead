@@ -288,3 +288,38 @@ func CreateDbFile(fullPath string) error {
 func Close() error {
 	return db.Close()
 }
+
+func GenerateGithubDeployKey() {
+	pub, priv, err := makeSSHKeyPair()
+	if err != nil {
+		log.Fatal(err)
+	}
+	db.Exec("update site set github_pub_key=?, github_priv_key=?;", pub, priv)
+}
+
+type Github struct {
+	User    string
+	Repo    string
+	PubKey  string
+	PrivKey string
+}
+
+func GetGithubInfo() *Github {
+	gh := &Github{}
+	row := db.QueryRow("select github_user, github_repo, github_pub_key, github_priv_key from site;")
+	err := row.Scan(&gh.User, &gh.Repo, &gh.PubKey, &gh.PrivKey)
+	if err != nil {
+		panic(err)
+	}
+	return gh
+}
+func (gh *Github) Save() error {
+	_, err := db.Exec(
+		"update site set github_user=?, github_repo=?, github_pub_key=?, github_priv_key=?;",
+		gh.User, gh.Repo, gh.PubKey, gh.PrivKey,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}

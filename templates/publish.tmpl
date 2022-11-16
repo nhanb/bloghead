@@ -1,0 +1,59 @@
+{{define "title"}}Publish{{end}}
+
+{{define "body"}}
+<h1>Publish</h1>
+
+<p>
+Publish your site to GitHub Pages.
+</p>
+
+<form action="{{.Paths.Publish}}" method="post">
+
+  <div>
+    <b>GitHub username & repo:</b><br />
+    <input type="text" name="gh-user" id="gh-user" value="{{.Gh.User}}" required
+        placeholder="username" style="width:200px; margin-top:0.5rem;" />
+    /
+    <input type="text" name="gh-repo" id="gh-repo" value="{{.Gh.Repo}}" required
+        placeholder="repo" style="width:300px; margin-top:0.5rem;" />
+  </div>
+
+  <div>
+    <input type="submit" formaction="{{.Paths.SaveGithubUserRepo}}"
+        value="{{if or .Gh.User .Gh.Repo}}Update{{else}}Save{{end}}" />
+    {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
+  </div>
+
+  <div>
+    <b>GitHub deploy key:</b><br />
+    <input type="submit" formaction="{{.Paths.GenGithubKey}}" value="Generate" />
+  </div>
+
+  {{if and .Gh.User .Gh.Repo .Gh.PrivKey .Gh.PubKey}}
+  <div>
+    Go to <a href="https://github.com/{{.Gh.Repo}}/settings/keys">https://github.com/{{.Gh.Repo}}/settings/keys</a>,
+    choose "Add deploy key", then enter the public key above.
+  </div>
+  {{end}}
+
+  <div>
+    <b>Profit:</b><br />
+    <input type="submit" value="Publish"
+        {{if not (and .Gh.User .Gh.Repo .Gh.PrivKey .Gh.PubKey)}}
+        title="Do the above steps first."
+        disabled
+        {{end}}
+    />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
+  </div>
+
+  {{.CsrfTag}}
+</form>
+
+<style>
+  b + br + input[type=submit] {
+    margin-top: 0.5rem;
+  }
+</style>
+{{end}}

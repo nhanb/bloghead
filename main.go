@@ -28,13 +28,19 @@ import (
 	"go.imnhan.com/bloghead/tk"
 )
 
+const ErrMsgCookie = "errMsg"
+const MsgCookie = "msg"
+
 type PathDefs struct {
-	Home     string
-	Settings string
-	NewPost  string
-	EditPost string
-	Preview  string
-	Export   string
+	Home               string
+	Settings           string
+	NewPost            string
+	EditPost           string
+	Preview            string
+	Export             string
+	Publish            string
+	GenGithubKey       string
+	SaveGithubUserRepo string
 
 	InputFile string
 }
@@ -47,12 +53,15 @@ func (p PathDefs) InputFileName() string {
 }
 
 var Paths = PathDefs{
-	Home:     "/",
-	Settings: "/settings",
-	NewPost:  "/new",
-	EditPost: "/edit/",
-	Preview:  "/preview/",
-	Export:   "/export",
+	Home:               "/",
+	Settings:           "/settings",
+	NewPost:            "/new",
+	EditPost:           "/edit/",
+	Preview:            "/preview/",
+	Export:             "/export",
+	Publish:            "/publish",
+	GenGithubKey:       "/publish/gh-gen-key",
+	SaveGithubUserRepo: "/publish/gh-save-repo",
 }
 
 //go:embed templates
@@ -70,6 +79,7 @@ type Templates struct {
 	NewPost  *template.Template
 	EditPost *template.Template
 	Export   *template.Template
+	Publish  *template.Template
 }
 
 var tmpls = Templates{
@@ -97,6 +107,11 @@ var tmpls = Templates{
 		tmplsFS,
 		"templates/base.tmpl",
 		"templates/export.tmpl",
+	)),
+	Publish: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/publish.tmpl",
 	)),
 }
 
@@ -359,6 +374,102 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func publishHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	if r.Method != "GET" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("Method not allowed."))
+		return
+	}
+
+	gh := models.GetGithubInfo()
+
+	var msg, errMsg string
+
+	msgCookie, err := r.Cookie(MsgCookie)
+	if err != nil {
+		msg = ""
+	} else {
+		msg = msgCookie.Value
+		http.SetCookie(w, &http.Cookie{
+			Name:     MsgCookie,
+			Value:    "asdf",
+			MaxAge:   -1,
+			SameSite: http.SameSiteStrictMode,
+		})
+	}
+
+	errMsgCookie, err := r.Cookie(ErrMsgCookie)
+	if err != nil {
+		errMsg = ""
+	} else {
+		errMsg = errMsgCookie.Value
+		http.SetCookie(w, &http.Cookie{
+			Name:     ErrMsgCookie,
+			Value:    "",
+			MaxAge:   -1,
+			SameSite: http.SameSiteStrictMode,
+		})
+	}
+
+	err = tmpls.Publish.Execute(w, struct {
+		Paths   PathDefs
+		CsrfTag template.HTML
+		Msg     string
+		ErrMsg  string
+		Gh      models.Github
+	}{
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Msg:     msg,
+		ErrMsg:  errMsg,
+		Gh:      *gh,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func saveGithubUserRepoHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("Method not allowed!"))
+		return
+	}
+
+	gh := &models.Github{
+		User: r.FormValue("gh-user"),
+		Repo: r.FormValue("gh-repo"),
+	}
+	err := gh.Save()
+	if err != nil {
+		http.SetCookie(w, &http.Cookie{
+			Name:     ErrMsgCookie,
+			Value:    err.Error(),
+			MaxAge:   1000,
+			SameSite: http.SameSiteStrictMode,
+		})
+	} else {
+		http.SetCookie(w, &http.Cookie{
+			Name:     MsgCookie,
+			Value:    "Successfully updated.",
+			MaxAge:   1000,
+			SameSite: http.SameSiteStrictMode,
+		})
+	}
+
+	http.Redirect(w, r, Paths.Publish, http.StatusSeeOther)
+}
+
 // Erases dest dir then copies everything from srcFS into dest.
 // It assumes dest dir already exists.
 func Export(srcFs fs.FS, dest string) error {
@@ -448,6 +559,8 @@ func handleAllPaths(srv *http.Server) {
 		),
 	)
 	http.HandleFunc(Paths.Export, exportHandler)
+	http.HandleFunc(Paths.Publish, publishHandler)
+	http.HandleFunc(Paths.SaveGithubUserRepo, saveGithubUserRepoHandler)
 }
 
 func main() {
