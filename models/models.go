@@ -289,34 +289,26 @@ func Close() error {
 	return db.Close()
 }
 
-func GenerateGithubDeployKey() {
-	pub, priv, err := makeSSHKeyPair()
-	if err != nil {
-		log.Fatal(err)
-	}
-	db.Exec("update site set github_pub_key=?, github_priv_key=?;", pub, priv)
+type Neocities struct {
+	Username string
+	Password string
+	// TODO: offer symmetry encryption for password.
+	// Ideally we could integrate with the OS's native keychain.
 }
 
-type Github struct {
-	User    string
-	Repo    string
-	PubKey  string
-	PrivKey string
-}
-
-func GetGithubInfo() *Github {
-	gh := &Github{}
-	row := db.QueryRow("select github_user, github_repo, github_pub_key, github_priv_key from site;")
-	err := row.Scan(&gh.User, &gh.Repo, &gh.PubKey, &gh.PrivKey)
+func QueryNeocities() *Neocities {
+	nc := &Neocities{}
+	row := db.QueryRow("select neocities_user, neocities_password from site;")
+	err := row.Scan(&nc.Username, &nc.Password)
 	if err != nil {
 		panic(err)
 	}
-	return gh
+	return nc
 }
-func (gh *Github) Save() error {
+func (nc *Neocities) Save() error {
 	_, err := db.Exec(
-		"update site set github_user=?, github_repo=?, github_pub_key=?, github_priv_key=?;",
-		gh.User, gh.Repo, gh.PubKey, gh.PrivKey,
+		"update site set neocities_user=?, neocities_password=?;",
+		nc.Username, nc.Password,
 	)
 	if err != nil {
 		return err

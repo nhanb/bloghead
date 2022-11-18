@@ -17,8 +17,8 @@
         font-size: inherit;
         padding: 0.3rem;
       }
-      input[type=submit],
-      input[type=file]{
+      input[type="submit"],
+      input[type="file"]{
         font-family: inherit;
       }
 
@@ -36,6 +36,9 @@
       }
       a:hover {
         background-color: cornsilk;
+      }
+      a[target="_blank"]::after {
+        content: "↗";
       }
 
       /* Navbar */
@@ -62,6 +65,7 @@
         gap: 1rem;
       }
       input[type="text"],
+      input[type="password"],
       textarea {
         width: 100%;
       }
@@ -109,7 +113,7 @@
         <li><a href="{{.Paths.Settings}}">Settings</a></li>
         <li><a href="{{.Paths.Export}}">Export</a></li>
         <li><a href="{{.Paths.Publish}}">Publish</a></li>
-        <li><a href="{{.Paths.Preview}}" target="_blank">Preview site↗</a></li>
+        <li><a href="{{.Paths.Preview}}" target="_blank">Preview site</a></li>
     </ul>
     <ul style="float:right;">
         <li>Editing <b>{{.Paths.InputFileName}}</b></li>

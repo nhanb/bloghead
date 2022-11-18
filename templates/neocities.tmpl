@@ -1,0 +1,29 @@
+{{define "title"}}Neocities Credentials{{end}}
+
+{{define "body"}}
+<h1>Neocities credentials</h1>
+
+<p>Put your credentials here so Bloghead can publish on your behalf.</p>
+
+<form action="{{.Paths.Neocities}}" method="post">
+  <label for="username">
+    <b>Username:</b><br />
+    <input type="text" name="username" id="username" value="{{.Nc.Username}}" required />
+  </label>
+
+  <label for="password">
+    <b>Password:</b><br />
+    <input type="password" name="password" id="password" value="{{.Nc.Password}}" required />
+  </label>
+
+  {{.CsrfTag}}
+
+  <div>
+    <input type="submit" value="Check & Save" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .ErrMsg}}<span id="err-msg">{{.ErrMsg}}</span>{{end}}
+  </div>
+</form>
+
+<p><a href="{{.Paths.Publish}}">« go back to Publish</a></p>
+{{end}}

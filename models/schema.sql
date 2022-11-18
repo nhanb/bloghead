@@ -9,20 +9,8 @@ create table site (
     tagline text not null default 'Let''s start this thing off right.',
     export_to text not null default '',
 
-    github_user text
-        check (
-            github_user = ''
-            or (
-                github_user regexp '^[A-Za-z0-9\-]{1,39}$'
-                and not github_user like '%--%'
-                and not github_user like '-%'
-                and not github_user like '%-'
-            )
-        )
-        not null default '',
-    github_repo text check (github_repo = '' or github_repo regexp '^[A-Za-z0-9_\.\-]+$') not null default '',
-    github_pub_key text not null default '',
-    github_priv_key text not null default ''
+    neocities_user text not null default '',
+    neocities_password text not null default ''
 );
 insert into site(id) values(0);
 

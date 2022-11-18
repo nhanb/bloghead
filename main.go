@@ -32,15 +32,14 @@ const ErrMsgCookie = "errMsg"
 const MsgCookie = "msg"
 
 type PathDefs struct {
-	Home               string
-	Settings           string
-	NewPost            string
-	EditPost           string
-	Preview            string
-	Export             string
-	Publish            string
-	GenGithubKey       string
-	SaveGithubUserRepo string
+	Home      string
+	Settings  string
+	NewPost   string
+	EditPost  string
+	Preview   string
+	Export    string
+	Publish   string
+	Neocities string
 
 	InputFile string
 }
@@ -53,15 +52,14 @@ func (p PathDefs) InputFileName() string {
 }
 
 var Paths = PathDefs{
-	Home:               "/",
-	Settings:           "/settings",
-	NewPost:            "/new",
-	EditPost:           "/edit/",
-	Preview:            "/preview/",
-	Export:             "/export",
-	Publish:            "/publish",
-	GenGithubKey:       "/publish/gh-gen-key",
-	SaveGithubUserRepo: "/publish/gh-save-repo",
+	Home:      "/",
+	Settings:  "/settings",
+	NewPost:   "/new",
+	EditPost:  "/edit/",
+	Preview:   "/preview/",
+	Export:    "/export",
+	Publish:   "/publish",
+	Neocities: "/publish/neocities",
 }
 
 //go:embed templates
@@ -74,12 +72,13 @@ var favicon []byte
 var faviconpng []byte
 
 type Templates struct {
-	Home     *template.Template
-	Settings *template.Template
-	NewPost  *template.Template
-	EditPost *template.Template
-	Export   *template.Template
-	Publish  *template.Template
+	Home      *template.Template
+	Settings  *template.Template
+	NewPost   *template.Template
+	EditPost  *template.Template
+	Export    *template.Template
+	Publish   *template.Template
+	Neocities *template.Template
 }
 
 var tmpls = Templates{
@@ -112,6 +111,11 @@ var tmpls = Templates{
 		tmplsFS,
 		"templates/base.tmpl",
 		"templates/publish.tmpl",
+	)),
+	Neocities: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/neocities.tmpl",
 	)),
 }
 
@@ -380,94 +384,84 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method != "GET" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Method not allowed."))
-		return
-	}
-
-	gh := models.GetGithubInfo()
-
+	site := models.QuerySite()
+	neocities := models.QueryNeocities()
 	var msg, errMsg string
 
-	msgCookie, err := r.Cookie(MsgCookie)
-	if err != nil {
-		msg = ""
-	} else {
-		msg = msgCookie.Value
-		http.SetCookie(w, &http.Cookie{
-			Name:     MsgCookie,
-			Value:    "asdf",
-			MaxAge:   -1,
-			SameSite: http.SameSiteStrictMode,
-		})
-	}
-
-	errMsgCookie, err := r.Cookie(ErrMsgCookie)
-	if err != nil {
-		errMsg = ""
-	} else {
-		errMsg = errMsgCookie.Value
-		http.SetCookie(w, &http.Cookie{
-			Name:     ErrMsgCookie,
-			Value:    "",
-			MaxAge:   -1,
-			SameSite: http.SameSiteStrictMode,
-		})
-	}
-
-	err = tmpls.Publish.Execute(w, struct {
+	err := tmpls.Publish.Execute(w, struct {
+		Site    models.Site
 		Paths   PathDefs
 		CsrfTag template.HTML
 		Msg     string
 		ErrMsg  string
-		Gh      models.Github
+		Nc      models.Neocities
 	}{
+		Site:    *site,
 		Paths:   Paths,
 		CsrfTag: csrfTag,
 		Msg:     msg,
 		ErrMsg:  errMsg,
-		Gh:      *gh,
+		Nc:      *neocities,
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func saveGithubUserRepoHandler(w http.ResponseWriter, r *http.Request) {
+func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 	csrfTag := CsrfCheck(w, r)
 	if csrfTag == "" {
 		return
 	}
 
-	if r.Method != "POST" {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		w.Write([]byte("Method not allowed!"))
-		return
+	site := models.QuerySite()
+	var msg, errMsg string
+	var neocities *models.Neocities
+
+	switch r.Method {
+	case "GET":
+		neocities = models.QueryNeocities()
+	case "POST":
+		neocities = &models.Neocities{
+			Username: r.FormValue("username"),
+			Password: r.FormValue("password"),
+		}
+		errMsg = func() string {
+			err := CheckNeocitiesCreds(neocities)
+			if err != nil {
+				return err.Error()
+			}
+			err = neocities.Save()
+			if err != nil {
+				return err.Error()
+			}
+			msg = "Confirmed valid credentials."
+			return ""
+		}()
 	}
 
-	gh := &models.Github{
-		User: r.FormValue("gh-user"),
-		Repo: r.FormValue("gh-repo"),
+	if errMsg != "" {
+		neocities = models.QueryNeocities()
 	}
-	err := gh.Save()
+
+	err := tmpls.Neocities.Execute(w, struct {
+		Site    models.Site
+		Paths   PathDefs
+		CsrfTag template.HTML
+		Msg     string
+		ErrMsg  string
+		Nc      models.Neocities
+	}{
+		Site:    *site,
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Msg:     msg,
+		ErrMsg:  errMsg,
+		Nc:      *neocities,
+	})
 	if err != nil {
-		http.SetCookie(w, &http.Cookie{
-			Name:     ErrMsgCookie,
-			Value:    err.Error(),
-			MaxAge:   1000,
-			SameSite: http.SameSiteStrictMode,
-		})
-	} else {
-		http.SetCookie(w, &http.Cookie{
-			Name:     MsgCookie,
-			Value:    "Successfully updated.",
-			MaxAge:   1000,
-			SameSite: http.SameSiteStrictMode,
-		})
+		log.Fatal(err)
 	}
-
-	http.Redirect(w, r, Paths.Publish, http.StatusSeeOther)
 }
 
 // Erases dest dir then copies everything from srcFS into dest.
@@ -560,7 +554,7 @@ func handleAllPaths(srv *http.Server) {
 	)
 	http.HandleFunc(Paths.Export, exportHandler)
 	http.HandleFunc(Paths.Publish, publishHandler)
-	http.HandleFunc(Paths.SaveGithubUserRepo, saveGithubUserRepoHandler)
+	http.HandleFunc(Paths.Neocities, neocitiesHandler)
 }
 
 func main() {
