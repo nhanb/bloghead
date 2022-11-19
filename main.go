@@ -388,6 +388,15 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 	neocities := models.QueryNeocities()
 	var msg, errMsg string
 
+	if r.Method == "POST" {
+		err := PublishNeocities(&bfs, neocities)
+		if err != nil {
+			errMsg = err.Error()
+		} else {
+			msg = "Successfully published."
+		}
+	}
+
 	err := tmpls.Publish.Execute(w, struct {
 		Site    models.Site
 		Paths   PathDefs
