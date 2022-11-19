@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -39,11 +40,24 @@ func CheckNeocitiesCreds(nc *models.Neocities) error {
 		fmt.Printf("Neocities error %d:\n%s\n", resp.StatusCode, body)
 		return errors.New("Neocities rejected the new credentials.")
 	default:
-		fmt.Printf("Neocities error %d:\n%s\n", resp.StatusCode, body)
+		var parsed NeocitiesErrResp
+		var serverMsg string
+		err := json.Unmarshal(body, &parsed)
+		if err == nil {
+			serverMsg = parsed.Message
+		} else {
+			serverMsg = string(body)
+		}
+		fmt.Printf("Neocities error %d:\n%s\n", resp.StatusCode, serverMsg)
 		return fmt.Errorf(
-			"Neocities credentials check failed: %d:\n%s", resp.StatusCode, body,
+			"Credentials check failed: [%d] %s", resp.StatusCode, serverMsg,
 		)
+
 	}
+}
+
+type NeocitiesErrResp struct {
+	Message string `json:"message"`
 }
 
 func PublishNeocities(src fs.FS, nc *models.Neocities) error {
@@ -100,8 +114,16 @@ func PublishNeocities(src fs.FS, nc *models.Neocities) error {
 	}
 
 	if resp.StatusCode != 200 {
+		var parsed NeocitiesErrResp
+		var serverMsg string
+		err := json.Unmarshal(respBody, &parsed)
+		if err == nil {
+			serverMsg = parsed.Message
+		} else {
+			serverMsg = string(respBody)
+		}
 		return fmt.Errorf(
-			"upload api call error %d:\n%s\n", resp.StatusCode, respBody,
+			"upload api call error %d:\n%s\n", resp.StatusCode, serverMsg,
 		)
 	}
 

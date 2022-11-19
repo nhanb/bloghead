@@ -122,5 +122,33 @@
     {{end}}
 
     {{template "body" .}}
+
+<script>
+// Pardon the ancient style JS spaghetti - I want this script to be as
+// compatible as possible without any transpilation mess.
+(function visualCueWhenSubmittingForm(){
+    var forms = document.getElementsByTagName("form");
+    for (var i = 0; i < forms.length; i++) {
+        forms[i].addEventListener("submit", function(evt){
+            // clean up previous (error) messages too while we're at it:
+            var msg = document.getElementById("msg");
+            msg && msg.remove();
+            var errMsg = document.getElementById("err-msg");
+            errMsg && errMsg.remove();
+
+            var form = evt.target;
+            var inputs = form.getElementsByTagName("input");
+            for (var j = 0; j < inputs.length; j++) {
+                var inp = inputs[j];
+                if (inp.getAttribute("type") === "submit") {
+                    inp.setAttribute("disabled", "disabled");
+                    inp.value += "… ⌛";
+                }
+            }
+        });
+    }
+})();
+</script>
+
   </body>
 </html>

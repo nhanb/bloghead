@@ -47,7 +47,7 @@ func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken template.HTML)
 	}
 
 	return template.HTML(fmt.Sprintf(
-		`<input type="hidden" name="%s" value="%s" />`,
+		`<input class="csrf-input" type="hidden" name="%s" value="%s" />`,
 		csrfInputName, csrfCookie.Value,
 	))
 }
