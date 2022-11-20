@@ -11,7 +11,7 @@ windows:
 		go build -o dist/bloghead.exe -ldflags -H=windowsgui
 
 run:
-	go run *.go
+	go build -o dist/ && ./dist/bloghead
 
 watch:
 	find . -name '*.go' -or -name '*.tmpl' -or -name '*.tcl' \
