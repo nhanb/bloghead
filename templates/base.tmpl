@@ -126,6 +126,17 @@
 <script>
 // Pardon the ancient style JS spaghetti - I want this script to be as
 // compatible as possible without any transpilation mess.
+
+function appendLoadingIcon(target) {
+    var icon = document.createElement("span");
+    icon.appendChild(document.createTextNode("⧖"));
+    target.parentNode.insertBefore(icon, target.nextSibling);
+    icon.style.animation = "spinner 1s linear infinite";
+    icon.style.display = "inline-block";
+    icon.style.marginLeft = "0.5rem";
+    icon.style.color = "grey";
+}
+
 (function visualCueWhenSubmittingForm(){
     var forms = document.getElementsByTagName("form");
     for (var i = 0; i < forms.length; i++) {
@@ -142,13 +153,19 @@
                 var inp = inputs[j];
                 if (inp.getAttribute("type") === "submit") {
                     inp.setAttribute("disabled", "disabled");
-                    inp.value += "… ⌛";
+                    appendLoadingIcon(inp);
                 }
             }
         });
     }
 })();
 </script>
+
+<style>
+@keyframes spinner {
+    100% { transform: rotate(360deg) }
+}
+</style>
 
   </body>
 </html>
