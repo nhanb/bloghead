@@ -32,14 +32,15 @@ const ErrMsgCookie = "errMsg"
 const MsgCookie = "msg"
 
 type PathDefs struct {
-	Home      string
-	Settings  string
-	NewPost   string
-	EditPost  string
-	Preview   string
-	Export    string
-	Publish   string
-	Neocities string
+	Home           string
+	Settings       string
+	NewPost        string
+	EditPost       string
+	Preview        string
+	Export         string
+	Publish        string
+	Neocities      string
+	NeocitiesClear string
 
 	InputFile string
 }
@@ -52,14 +53,15 @@ func (p PathDefs) InputFileName() string {
 }
 
 var Paths = PathDefs{
-	Home:      "/",
-	Settings:  "/settings",
-	NewPost:   "/new",
-	EditPost:  "/edit/",
-	Preview:   "/preview/",
-	Export:    "/export",
-	Publish:   "/publish",
-	Neocities: "/publish/neocities",
+	Home:           "/",
+	Settings:       "/settings",
+	NewPost:        "/new",
+	EditPost:       "/edit/",
+	Preview:        "/preview/",
+	Export:         "/export",
+	Publish:        "/publish",
+	Neocities:      "/publish/neocities",
+	NeocitiesClear: "/publish/neocities/clear",
 }
 
 //go:embed templates
@@ -72,13 +74,14 @@ var favicon []byte
 var faviconpng []byte
 
 type Templates struct {
-	Home      *template.Template
-	Settings  *template.Template
-	NewPost   *template.Template
-	EditPost  *template.Template
-	Export    *template.Template
-	Publish   *template.Template
-	Neocities *template.Template
+	Home           *template.Template
+	Settings       *template.Template
+	NewPost        *template.Template
+	EditPost       *template.Template
+	Export         *template.Template
+	Publish        *template.Template
+	Neocities      *template.Template
+	NeocitiesClear *template.Template
 }
 
 var tmpls = Templates{
@@ -116,6 +119,11 @@ var tmpls = Templates{
 		tmplsFS,
 		"templates/base.tmpl",
 		"templates/neocities.tmpl",
+	)),
+	NeocitiesClear: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/neocities-clear.tmpl",
 	)),
 }
 
@@ -417,6 +425,50 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func neocitiesClearHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	neocities := models.QueryNeocities()
+	if neocities.Username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Can't clear what's not set."))
+		return
+	}
+
+	site := models.QuerySite()
+	var msg, errMsg string
+
+	if r.Method == "POST" {
+		err := models.ClearNeocities()
+		if err == nil {
+			http.Redirect(w, r, Paths.Publish, http.StatusSeeOther)
+			return
+		}
+		errMsg = err.Error()
+	}
+
+	err := tmpls.NeocitiesClear.Execute(w, struct {
+		Site    models.Site
+		Paths   PathDefs
+		CsrfTag template.HTML
+		Msg     string
+		ErrMsg  string
+		Nc      models.Neocities
+	}{
+		Site:    *site,
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Msg:     msg,
+		ErrMsg:  errMsg,
+		Nc:      *neocities,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 	csrfTag := CsrfCheck(w, r)
 	if csrfTag == "" {
@@ -564,6 +616,7 @@ func handleAllPaths(srv *http.Server) {
 	http.HandleFunc(Paths.Export, exportHandler)
 	http.HandleFunc(Paths.Publish, publishHandler)
 	http.HandleFunc(Paths.Neocities, neocitiesHandler)
+	http.HandleFunc(Paths.NeocitiesClear, neocitiesClearHandler)
 }
 
 func main() {

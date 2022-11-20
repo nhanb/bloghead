@@ -310,8 +310,11 @@ func (nc *Neocities) Save() error {
 		"update site set neocities_user=?, neocities_password=?;",
 		nc.Username, nc.Password,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
+}
+func ClearNeocities() error {
+	_, err := db.Exec(
+		"update site set neocities_user='', neocities_password='';",
+	)
+	return err
 }

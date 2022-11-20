@@ -1,0 +1,31 @@
+{{define "title"}}Clear Neocities credentials{{end}}
+
+{{define "body"}}
+<h1>Clear Neocities credentials</h1>
+
+<p>Are you sure?</p>
+
+<ul>
+    <li>Bloghead won't be able to publish to Neocities anymore.</li>
+    <li>
+        Your content on
+        <a target="_blank" href="https://{{.Nc.Username}}.neocities.org">
+            {{.Nc.Username}}.neocities.org</a>
+        will still remain.
+    </li>
+    <li>You can add your credentials back any time.</li>
+</ul>
+
+<form action="{{.Paths.NeocitiesClear}}" method="post">
+  {{.CsrfTag}}
+
+  <div>
+    <input type="submit" value="Clear credentials" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+    {{if .ErrMsg}}<span id="err-msg">{{.ErrMsg}}</span>{{end}}
+
+  </div>
+</form>
+
+<p><a href="{{.Paths.Publish}}">« go back to Publish</a></p>
+{{end}}
