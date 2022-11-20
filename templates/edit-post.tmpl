@@ -27,7 +27,7 @@
         only a-z, A-Z, 0-9, hyphen, underscore, and period are allowed
     </span><br />
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
-        pattern="^[a-zA-Z0-9-._]+$" />
+        pattern="^[\w\-\.\~]+$" />
   </label>
   <label for="content">
     <span class="label-text">Content:</span><br />

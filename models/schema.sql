@@ -1,6 +1,6 @@
 pragma user_version = 1;
-pragma foreign_keys = true;
-pragma busy_timeout = 1000;
+pragma foreign_keys = on;
+pragma busy_timeout = 4000;
 
 -- global options & site-wide metadata
 create table site (
@@ -16,9 +16,20 @@ insert into site(id) values(0);
 
 create table post (
     id integer primary key,
-    slug text unique check (slug regexp '^[a-zA-Z0-9-._]+$') not null,
+    slug text unique check (slug regexp '^[\w\-\.\~]+$') not null,
     title text unique not null,
     content text not null,
     created_at text default (datetime('now', 'localtime')),
     updated_at text default null
+);
+
+create table file (
+    id integer primary key,
+    name text not null check (name regexp '^[\w\-\.\~]+$'),
+    data blob not null,
+
+    post_id integer not null,
+    foreign key (post_id) references post(id) on delete cascade,
+
+    unique(post_id, name)
 );
