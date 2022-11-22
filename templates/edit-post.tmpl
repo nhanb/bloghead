@@ -10,11 +10,11 @@
 <form action="{{.ActionPath}}" method="post">
   <p style="margin:0; float:'right'; display:'block';">
   {{if not .Post.CreatedAt.IsZero}}
-  Created: {{.Post.CreatedAt.Format "Monday 2006 Jan 2"}}<br>
+  Created: {{.Post.CreatedAt.Local.Format "Monday 2006 Jan 2"}}<br>
   {{end}}
 
   {{if not .Post.UpdatedAt.IsZero}}
-  Updated: {{.Post.UpdatedAt.Format "Monday 2006 Jan 2"}}<br />
+  Updated: {{.Post.UpdatedAt.Local.Format "Monday 2006 Jan 2"}}<br />
   {{end}}
   </p>
   <label for="title">

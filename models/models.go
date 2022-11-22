@@ -105,7 +105,7 @@ func QueryPosts() (posts []Post) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
+		p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -155,13 +155,13 @@ func QueryPost(id int64) (*Post, error) {
 
 	rows.Scan(&p.Slug, &p.Title, &p.Content, &createdAt, &updatedAt)
 
-	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
+	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if updatedAt != "" {
-		p.UpdatedAt, err = time.Parse("2006-01-02 15:04:05", updatedAt)
+		p.UpdatedAt, err = time.Parse("2006-01-02 15:04:05Z", updatedAt)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -185,7 +185,7 @@ func GetPostBySlug(slug string) (*Post, error) {
 	}
 	var createdAt string
 	rows.Scan(&p.Id, &p.Title, &p.Content, &createdAt)
-	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05", createdAt)
+	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -217,7 +217,7 @@ func (p *Post) Update() error {
 	now := time.Now()
 	_, err := db.Exec(
 		"update post set title=?, slug=?, content=?, updated_at=? where id=?;",
-		p.Title, p.Slug, p.Content, now.Format("2006-01-02 15:04:05"), p.Id,
+		p.Title, p.Slug, p.Content, now.UTC().Format("2006-01-02 15:04:05Z"), p.Id,
 	)
 	if err != nil {
 		return processPostError(err)

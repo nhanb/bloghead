@@ -3,7 +3,7 @@
 
 <ul>
     {{range .Posts}}
-    <li>{{.CreatedAt.Format "2006-01-02"}} — <a href="{{.Slug}}/">{{.Title}}</a></li>
+    <li>{{.CreatedAt.Local.Format "2006-01-02"}} — <a href="{{.Slug}}/">{{.Title}}</a></li>
     {{end}}
 </ul>
 

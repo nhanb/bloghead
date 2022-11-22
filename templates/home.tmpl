@@ -7,7 +7,7 @@
     <legend><a href="{{.Paths.NewPost}}">[+] Create new post</a></legend>
     <ul>
         {{range .Posts}}
-        <li>{{.CreatedAt.Format "2006-01-02"}} — <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
+        <li>{{.CreatedAt.Local.Format "2006-01-02"}} — <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
         {{end}}
     </ul>
 </fieldset>

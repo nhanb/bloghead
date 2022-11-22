@@ -1,7 +1,7 @@
 {{define "body"}}
 <h1 class="post-title">{{.Post.Title}}</h1>
-<time class="post-time" datetime="{{.Post.CreatedAt.Format "2006-01-02"}}">
-    {{.Post.CreatedAt.Format "Monday, 02 Jan 2006"}}
+<time class="post-time" datetime="{{.Post.CreatedAt.Local.Format "2006-01-02"}}">
+    {{.Post.CreatedAt.Local.Format "Monday, 02 Jan 2006"}}
 </time>
 <content>
 {{.HtmlContent}}
