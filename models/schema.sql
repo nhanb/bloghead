@@ -25,7 +25,7 @@ create table post (
     id integer primary key,
     slug text unique check (slug regexp '^[\w\-\.\~]+$') not null,
     title text unique not null,
-    content text not null,
+    content text not null default '',
     created_at datetime not null default (strftime('%Y-%m-%d %H:%M:%SZ')),
     updated_at datetime default null,
     is_draft boolean not null default true

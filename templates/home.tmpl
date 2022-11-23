@@ -11,8 +11,7 @@
             {{.CreatedAt.Local.Format "2006-01-02"}} —
             <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a>
             {{if .IsDraft}}
-            <span class="hint" style="color:grey; font-style:italic;"
-                title="A draft post won't be listed on your home page, but still accessible via direct link.">
+            <span class="hint" style="color:grey; font-style:italic;" title="{{$.DraftHint}}">
                 [draft]
             </span>
             {{end}}

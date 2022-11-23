@@ -31,6 +31,8 @@ import (
 const ErrMsgCookie = "errMsg"
 const MsgCookie = "msg"
 
+const DraftHint = "A draft post won't be listed on your home page, but still accessible via direct link."
+
 type PathDefs struct {
 	Home           string
 	Settings       string
@@ -98,7 +100,7 @@ var tmpls = Templates{
 	NewPost: template.Must(template.ParseFS(
 		tmplsFS,
 		"templates/base.tmpl",
-		"templates/edit-post.tmpl",
+		"templates/new-post.tmpl",
 	)),
 	EditPost: template.Must(template.ParseFS(
 		tmplsFS,
@@ -146,13 +148,15 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpls.Home.Execute(w,
 		struct {
-			Site  *models.Site
-			Posts []models.Post
-			Paths PathDefs
+			Site      *models.Site
+			Posts     []models.Post
+			Paths     PathDefs
+			DraftHint string
 		}{
-			Site:  site,
-			Posts: posts,
-			Paths: Paths,
+			Site:      site,
+			Posts:     posts,
+			Paths:     Paths,
+			DraftHint: DraftHint,
 		},
 	)
 	if err != nil {
@@ -171,9 +175,8 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
 		post.Title = r.FormValue("title")
-		post.Content = r.FormValue("content")
 		post.Slug = r.FormValue("slug")
-		post.IsDraft = r.FormValue("is-draft") != ""
+		post.IsDraft = true
 		err := post.Create()
 		if err == nil {
 			http.Redirect(
@@ -189,23 +192,17 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := tmpls.NewPost.Execute(w, struct {
-		Paths      PathDefs
-		CsrfTag    template.HTML
-		Msg        string
-		ErrMsg     string
-		Post       models.Post
-		Title      string
-		SubmitText string
-		ActionPath string
+		Paths   PathDefs
+		CsrfTag template.HTML
+		ErrMsg  string
+		Post    models.Post
+		Title   string
 	}{
-		Paths:      Paths,
-		CsrfTag:    csrfTag,
-		Msg:        "",
-		ErrMsg:     errMsg,
-		Post:       post,
-		Title:      "New post",
-		SubmitText: "Create",
-		ActionPath: Paths.NewPost,
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		ErrMsg:  errMsg,
+		Post:    post,
+		Title:   "New post",
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -250,7 +247,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		msg = r.URL.Query().Get("msg")
 	}
 
-	err = tmpls.NewPost.Execute(w, struct {
+	err = tmpls.EditPost.Execute(w, struct {
 		Paths      PathDefs
 		CsrfTag    template.HTML
 		Msg        string
@@ -259,6 +256,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		Title      string
 		SubmitText string
 		ActionPath string
+		DraftHint  string
 	}{
 		Paths:      Paths,
 		CsrfTag:    csrfTag,
@@ -268,6 +266,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		Title:      fmt.Sprintf("Editing post: %s", post.Title),
 		SubmitText: "Update",
 		ActionPath: r.URL.Path,
+		DraftHint:  DraftHint,
 	})
 	if err != nil {
 		log.Fatal(err)

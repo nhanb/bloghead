@@ -4,19 +4,10 @@
 <h1>{{.Title}}</h1>
 
 {{if .Post.Slug}}
-<a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">Preview live post</a>
+<p><a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">Preview post</a></p>
 {{end}}
 
 <form action="{{.ActionPath}}" method="post">
-  <p style="margin:0; float:'right'; display:'block';">
-  {{if not .Post.CreatedAt.IsZero}}
-  Created: {{.Post.CreatedAt.Local.Format "Monday 2006 Jan 2"}}<br>
-  {{end}}
-
-  {{if not .Post.UpdatedAt.IsZero}}
-  Updated: {{.Post.UpdatedAt.Local.Format "Monday 2006 Jan 2"}}<br />
-  {{end}}
-  </p>
   <label for="title">
     <span class="label-text">Title:</span><br />
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
@@ -40,9 +31,11 @@
   </label>
 
   <div>
-    <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
+    <label title="{{.DraftHint}}" for="is-draft">
+      <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
         id="is-draft" name="is-draft" value="is-draft">
-    <label for="is-draft">Draft</label>
+      Draft
+    </label>
   </div>
 
   {{.CsrfTag}}
