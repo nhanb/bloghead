@@ -23,11 +23,12 @@ func main() {
 
 	for _, seed := range seeds {
 		data, _ := os.ReadFile(seed)
-		parts := strings.SplitN(string(data), "\n", 3)
+		parts := strings.SplitN(string(data), "\n", 4)
 		(&models.Post{
-			Slug:    parts[0],
-			Title:   parts[1],
-			Content: parts[2],
+			IsDraft: parts[0] == "draft",
+			Slug:    parts[1],
+			Title:   parts[2],
+			Content: parts[3],
 		}).Create()
 	}
 }

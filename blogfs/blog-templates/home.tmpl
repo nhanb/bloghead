@@ -3,7 +3,9 @@
 
 <ul>
     {{range .Posts}}
+    {{if not .IsDraft}}
     <li>{{.CreatedAt.Local.Format "2006-01-02"}} — <a href="{{.Slug}}/">{{.Title}}</a></li>
+    {{end}}
     {{end}}
 </ul>
 

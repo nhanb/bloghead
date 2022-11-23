@@ -26,13 +26,10 @@ create table post (
     slug text unique check (slug regexp '^[\w\-\.\~]+$') not null,
     title text unique not null,
     content text not null,
-    created_at text default (strftime('%Y-%m-%d %H:%M:%SZ')),
-    updated_at text default null,
-    published_at text default null
-) strict;
-
-create view published_post as
-select * from post where published_at <= strftime('%Y-%m-%d %H:%M:%SZ');
+    created_at datetime not null default (strftime('%Y-%m-%d %H:%M:%SZ')),
+    updated_at datetime default null,
+    is_draft boolean not null default true
+);
 
 create table file (
     id integer primary key,

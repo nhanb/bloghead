@@ -90,22 +90,18 @@ type Post struct {
 	Content   string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	IsDraft   bool
 }
 
 func QueryPosts() (posts []Post) {
-	rows, err := db.Query("select id, slug, title, content, created_at from post order by id desc;")
+	rows, err := db.Query("select id, slug, title, content, created_at, is_draft from post order by id desc;")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var p Post
-		var createdAt string
-		err = rows.Scan(&p.Id, &p.Slug, &p.Title, &p.Content, &createdAt)
-		if err != nil {
-			log.Fatal(err)
-		}
-		p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
+		err = rows.Scan(&p.Id, &p.Slug, &p.Title, &p.Content, &p.CreatedAt, &p.IsDraft)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -142,7 +138,10 @@ func QueryPostSlugs() (names []string) {
 
 func QueryPost(id int64) (*Post, error) {
 	p := Post{Id: id}
-	rows, err := db.Query("select slug, title, content, created_at, updated_at from post where id=?;", id)
+	rows, err := db.Query(
+		"select slug, title, content, is_draft, created_at, updated_at from post where id=?;",
+		id,
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -151,28 +150,14 @@ func QueryPost(id int64) (*Post, error) {
 	if !found {
 		return nil, errors.New(fmt.Sprintf("Post id=%d not found.", id))
 	}
-	var createdAt, updatedAt string
-
-	rows.Scan(&p.Slug, &p.Title, &p.Content, &createdAt, &updatedAt)
-
-	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if updatedAt != "" {
-		p.UpdatedAt, err = time.Parse("2006-01-02 15:04:05Z", updatedAt)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
+	rows.Scan(&p.Slug, &p.Title, &p.Content, &p.IsDraft, &p.CreatedAt, &p.UpdatedAt)
 	return &p, nil
 }
 
 func GetPostBySlug(slug string) (*Post, error) {
 	p := Post{Slug: slug}
 	rows, err := db.Query(
-		"select id, title, content, created_at from post where slug=?;",
+		"select id, title, content, created_at, is_draft from post where slug=?;",
 		slug,
 	)
 	if err != nil {
@@ -183,12 +168,7 @@ func GetPostBySlug(slug string) (*Post, error) {
 	if !found {
 		return nil, errors.New(fmt.Sprintf(`Post slug="%s" not found.`, slug))
 	}
-	var createdAt string
-	rows.Scan(&p.Id, &p.Title, &p.Content, &createdAt)
-	p.CreatedAt, err = time.Parse("2006-01-02 15:04:05Z", createdAt)
-	if err != nil {
-		log.Fatal(err)
-	}
+	rows.Scan(&p.Id, &p.Title, &p.Content, &p.CreatedAt, &p.IsDraft)
 	return &p, nil
 }
 
@@ -197,8 +177,8 @@ func (p *Post) Create() error {
 		log.Fatalf("Calling Create() on existing Post: id=%d\n", p.Id)
 	}
 	result, err := db.Exec(
-		"insert into post (title, slug, content) values (?,?,?);",
-		p.Title, p.Slug, p.Content,
+		"insert into post (title, slug, content, is_draft) values (?,?,?,?);",
+		p.Title, p.Slug, p.Content, p.IsDraft,
 	)
 	if err != nil {
 		return processPostError(err)
@@ -216,8 +196,9 @@ func (p *Post) Update() error {
 	}
 	now := time.Now()
 	_, err := db.Exec(
-		"update post set title=?, slug=?, content=?, updated_at=? where id=?;",
-		p.Title, p.Slug, p.Content, now.UTC().Format("2006-01-02 15:04:05Z"), p.Id,
+		"update post set title=?, slug=?, content=?, updated_at=?, is_draft=? where id=?;",
+		p.Title, p.Slug, p.Content, now.UTC().Format("2006-01-02 15:04:05Z"),
+		p.IsDraft, p.Id,
 	)
 	if err != nil {
 		return processPostError(err)

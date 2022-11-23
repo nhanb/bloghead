@@ -173,6 +173,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.Title = r.FormValue("title")
 		post.Content = r.FormValue("content")
 		post.Slug = r.FormValue("slug")
+		post.IsDraft = r.FormValue("is-draft") != ""
 		err := post.Create()
 		if err == nil {
 			http.Redirect(
@@ -237,6 +238,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.Title = r.FormValue("title")
 		post.Content = r.FormValue("content")
 		post.Slug = r.FormValue("slug")
+		post.IsDraft = r.FormValue("is-draft") != ""
 		err := post.Update()
 		if err == nil {
 			msg = fmt.Sprintf("Updated at %s", post.UpdatedAt.Local().Format("3:04:05 PM"))

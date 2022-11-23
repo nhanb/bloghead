@@ -7,7 +7,16 @@
     <legend><a href="{{.Paths.NewPost}}">[+] Create new post</a></legend>
     <ul>
         {{range .Posts}}
-        <li>{{.CreatedAt.Local.Format "2006-01-02"}} — <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a></li>
+        <li>
+            {{.CreatedAt.Local.Format "2006-01-02"}} —
+            <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a>
+            {{if .IsDraft}}
+            <span class="hint" style="color:grey; font-style:italic;"
+                title="A draft post won't be listed on your home page, but still accessible via direct link.">
+                [draft]
+            </span>
+            {{end}}
+        </li>
         {{end}}
     </ul>
 </fieldset>

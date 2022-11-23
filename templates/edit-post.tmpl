@@ -39,6 +39,12 @@
     <textarea id="content" name="content" cols="30" rows="20" required>{{.Post.Content}}</textarea>
   </label>
 
+  <div>
+    <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
+        id="is-draft" name="is-draft" value="is-draft">
+    <label for="is-draft">Draft</label>
+  </div>
+
   {{.CsrfTag}}
 
   <div>
