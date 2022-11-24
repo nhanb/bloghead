@@ -38,6 +38,7 @@ type PathDefs struct {
 	Settings       string
 	NewPost        string
 	EditPost       string
+	Attachments    string
 	Preview        string
 	Export         string
 	Publish        string
@@ -48,17 +49,18 @@ type PathDefs struct {
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
-	return fmt.Sprintf("%s/%d", p.EditPost, id)
+	return fmt.Sprintf("%s%d", p.EditPost, id)
 }
-func (p PathDefs) InputFileName() string {
+func (p *PathDefs) InputFileName() string {
 	return filepath.Base(p.InputFile)
 }
 
-var Paths = PathDefs{
+var Paths = &PathDefs{
 	Home:           "/",
 	Settings:       "/settings",
 	NewPost:        "/new",
 	EditPost:       "/edit/",
+	Attachments:    "/attachments/",
 	Preview:        "/preview/",
 	Export:         "/export",
 	Publish:        "/publish",
@@ -150,7 +152,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		struct {
 			Site      *models.Site
 			Posts     []models.Post
-			Paths     PathDefs
+			Paths     *PathDefs
 			DraftHint string
 		}{
 			Site:      site,
@@ -192,7 +194,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := tmpls.NewPost.Execute(w, struct {
-		Paths   PathDefs
+		Paths   *PathDefs
 		CsrfTag template.HTML
 		ErrMsg  string
 		Post    models.Post
@@ -248,7 +250,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpls.EditPost.Execute(w, struct {
-		Paths      PathDefs
+		Paths      *PathDefs
 		CsrfTag    template.HTML
 		Msg        string
 		ErrMsg     string
@@ -296,7 +298,7 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpls.Settings.Execute(w, struct {
 		Site    models.Site
-		Paths   PathDefs
+		Paths   *PathDefs
 		CsrfTag template.HTML
 		Msg     string
 	}{
@@ -368,7 +370,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := tmpls.Export.Execute(w, struct {
-		Paths       PathDefs
+		Paths       *PathDefs
 		CsrfTag     template.HTML
 		ExportTo    string
 		Msg         string
@@ -408,7 +410,7 @@ func publishHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpls.Publish.Execute(w, struct {
 		Site    models.Site
-		Paths   PathDefs
+		Paths   *PathDefs
 		CsrfTag template.HTML
 		Msg     string
 		ErrMsg  string
@@ -453,7 +455,7 @@ func neocitiesClearHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpls.NeocitiesClear.Execute(w, struct {
 		Site    models.Site
-		Paths   PathDefs
+		Paths   *PathDefs
 		CsrfTag template.HTML
 		Msg     string
 		ErrMsg  string
@@ -508,7 +510,7 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := tmpls.Neocities.Execute(w, struct {
 		Site    models.Site
-		Paths   PathDefs
+		Paths   *PathDefs
 		CsrfTag template.HTML
 		Msg     string
 		ErrMsg  string

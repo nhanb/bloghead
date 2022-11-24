@@ -299,3 +299,11 @@ func ClearNeocities() error {
 	)
 	return err
 }
+
+type Attachment struct {
+	Id      int64
+	Name    string
+	Data    []byte
+	Content string
+	PostId  int64
+}

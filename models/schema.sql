@@ -31,7 +31,7 @@ create table post (
     is_draft boolean not null default true
 );
 
-create table file (
+create table attachment (
     id integer primary key,
     name text not null check (name regexp '^[\w\-\.\~]+$'),
     data blob not null,

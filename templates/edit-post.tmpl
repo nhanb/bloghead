@@ -20,6 +20,18 @@
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
         pattern="^[\w\-\.\~]+$" />
   </label>
+
+  <details>
+    <summary>
+      <b>Attachments (2)</b>
+      <a style="float:right;" href="">Manage</a>
+    </summary>
+    <ul>
+      <li><a target="_blank" href="">file1.jpg</a></li>
+      <li><a target="_blank" href="">file2.jpg</a></li>
+    </ul>
+  </details>
+
   <label for="content">
     <span class="label-text">Content:</span><br />
     <span class="hint">
@@ -52,4 +64,16 @@
     {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
 </form>
+
+<style>
+details > summary {
+    background-color: #eaeaea;
+    padding: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+details {
+    background-color: #f7f7f7;
+}
+</style>
 {{end}}

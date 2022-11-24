@@ -9,7 +9,7 @@
         {{range .Posts}}
         <li>
             {{.CreatedAt.Local.Format "2006-01-02"}} —
-            <a href="{{$.Paths.EditPost}}{{.Id}}">{{.Title}}</a>
+            <a href="{{($.Paths.EditPostWithId .Id)}}">{{.Title}}</a>
             {{if .IsDraft}}
             <span class="hint" style="color:grey; font-style:italic;" title="{{$.DraftHint}}">
                 [draft]
