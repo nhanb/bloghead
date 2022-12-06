@@ -86,6 +86,7 @@ type Templates struct {
 	Publish        *template.Template
 	Neocities      *template.Template
 	NeocitiesClear *template.Template
+	Attachments    *template.Template
 }
 
 var tmpls = Templates{
@@ -108,6 +109,11 @@ var tmpls = Templates{
 		tmplsFS,
 		"templates/base.tmpl",
 		"templates/edit-post.tmpl",
+	)),
+	Attachments: template.Must(template.ParseFS(
+		tmplsFS,
+		"templates/base.tmpl",
+		"templates/attachments.tmpl",
 	)),
 	Export: template.Must(template.ParseFS(
 		tmplsFS,
@@ -210,6 +216,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 }
+
 func editPostHandler(w http.ResponseWriter, r *http.Request) {
 	csrfTag := CsrfCheck(w, r)
 	if csrfTag == "" {
@@ -269,6 +276,27 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		SubmitText: "Update",
 		ActionPath: r.URL.Path,
 		DraftHint:  DraftHint,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	err := tmpls.Attachments.Execute(w, struct {
+		Paths   *PathDefs
+		CsrfTag template.HTML
+		Site    *models.Site
+		Msg     string
+	}{
+		Paths:   Paths,
+		CsrfTag: csrfTag,
+		Site:    models.QuerySite(),
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -609,6 +637,7 @@ func handleAllPaths(srv *http.Server) {
 	http.HandleFunc(Paths.Settings, settingsHandler)
 	http.HandleFunc(Paths.NewPost, newPostHandler)
 	http.HandleFunc(Paths.EditPost, editPostHandler)
+	http.HandleFunc(Paths.Attachments, attachmentsHandler)
 	http.Handle(
 		Paths.Preview,
 		http.StripPrefix(
