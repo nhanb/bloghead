@@ -9,8 +9,24 @@ import (
 const OutPath = "blogfs/djot.lua"
 
 var LuaModules = []string{
-	"djot", "djot.ast", "djot.attributes", "djot.block", "djot.emoji",
-	"djot.html", "djot.inline", "djot.json", "djot.match",
+	//"djot",
+	//"djot.ast",
+	//"djot.attributes",
+	//"djot.block",
+	//"djot.emoji",
+	//"djot.html",
+	//"djot.inline",
+	//"djot.json",
+	//"djot.match",
+	"djot.attributes",
+	"djot.inline",
+	"djot.block",
+	"djot.ast",
+	"djot.emoji",
+	"djot.html",
+	"djot.filter",
+	"djot.json",
+	"djot",
 }
 
 func main() {
@@ -58,9 +74,9 @@ func main() {
 	_, err = outfile.WriteString(
 		`local djot = require("djot")
 function djot_to_html (input)
-    local parser = djot.Parser:new(input)
-    parser:parse()
-    local html = parser:render_html()
+    local djot = require("djot")
+    local doc = djot.parse(input)
+    local html = djot.render_html(doc)
     return html
 end
 `)
