@@ -1,11 +1,11 @@
-{{define "title"}}Attachments{{end}}
+{{define "title"}}Attachments for "{{.Post.Title}}"{{end}}
 
 {{define "body"}}
-<h1>Attachments</h1>
+<h1>Attachments for <a href="{{.Paths.EditPostWithId .Post.Id}}">{{.Post.Title}}</a></h1>
 
 <fieldset>
   <legend><b>Upload</b></legend>
-  <form action="{{.Paths.Attachments}}" method="post">
+  <form method="post" enctype="multipart/form-data">
     <div>
       <input type="file" multiple name="attachments" id="attachments">
     </div>
@@ -19,6 +19,8 @@
   </form>
 </fieldset>
 
+{{if .Attachments}}
+
 <p>Current attachments:</p>
 
 <table>
@@ -26,26 +28,22 @@
     <tr>
       <th>Name</th>
       <th>Size</th>
-      <th>Actions</th>
     </tr>
   </thead>
   <tbody>
+    {{range .Attachments}}
     <tr>
-      <td><a target="_blank" href="">file1.jpg</a></td>
-      <td>20 KiB</td>
+      <td><a target="_blank" href="">{{.Name}}</a></td>
+      <td>{{.Size}}</td>
       <td>
         <a href="">delete</a>
       </td>
     </tr>
-    <tr>
-      <td><a target="_blank" href="">file2.mp4</a></td>
-      <td>3 MiB</td>
-      <td>
-        <a href="">delete</a>
-      </td>
-    </tr>
+    {{end}}
   </tbody>
 </table>
+
+{{end}}
 
 <style>
   input[type="file"] {

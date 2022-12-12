@@ -51,6 +51,18 @@ type PathDefs struct {
 func (p *PathDefs) EditPostWithId(id int64) string {
 	return fmt.Sprintf("%s%d", p.EditPost, id)
 }
+func (p *PathDefs) AttachmentsOfPost(id int64) string {
+	return fmt.Sprintf("%s%d", p.Attachments, id)
+}
+func (p *PathDefs) GetPostIdFromAttachmentsPath(path string) (int64, error) {
+	path = path[len(p.Attachments):]
+	path = strings.TrimSuffix(path, "/")
+	id, err := strconv.ParseInt(path, 10, 64)
+	if id <= 0 {
+		err = errors.New("Invalid (non-positive) post id")
+	}
+	return id, err
+}
 func (p *PathDefs) InputFileName() string {
 	return filepath.Base(p.InputFile)
 }
@@ -257,46 +269,105 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpls.EditPost.Execute(w, struct {
-		Paths      *PathDefs
-		CsrfTag    template.HTML
-		Msg        string
-		ErrMsg     string
-		Post       models.Post
-		Title      string
-		SubmitText string
-		ActionPath string
-		DraftHint  string
+		Paths       *PathDefs
+		CsrfTag     template.HTML
+		Msg         string
+		ErrMsg      string
+		Post        models.Post
+		Title       string
+		SubmitText  string
+		ActionPath  string
+		DraftHint   string
+		Attachments []models.Attachment
 	}{
-		Paths:      Paths,
-		CsrfTag:    csrfTag,
-		Msg:        msg,
-		ErrMsg:     errMsg,
-		Post:       *post,
-		Title:      fmt.Sprintf("Editing post: %s", post.Title),
-		SubmitText: "Update",
-		ActionPath: r.URL.Path,
-		DraftHint:  DraftHint,
+		Paths:       Paths,
+		CsrfTag:     csrfTag,
+		Msg:         msg,
+		ErrMsg:      errMsg,
+		Post:        *post,
+		Title:       fmt.Sprintf("Editing post: %s", post.Title),
+		SubmitText:  "Update",
+		ActionPath:  r.URL.Path,
+		DraftHint:   DraftHint,
+		Attachments: models.QueryAttachments(postId),
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
+func write404(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte("404 Not Fun :(\n"))
+	w.Write([]byte(r.URL.Path))
+}
+
 func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
+	postId, err := Paths.GetPostIdFromAttachmentsPath(r.URL.Path)
+	if err != nil {
+		write404(w, r)
+		return
+	}
+
+	post, err := models.QueryPost(postId)
+	if err != nil {
+		write404(w, r)
+		return
+	}
+
 	csrfTag := CsrfCheck(w, r)
 	if csrfTag == "" {
 		return
 	}
 
-	err := tmpls.Attachments.Execute(w, struct {
-		Paths   *PathDefs
-		CsrfTag template.HTML
-		Site    *models.Site
-		Msg     string
+	if r.Method == "POST" {
+		err := r.ParseMultipartForm(50 * 1024 * 1024)
+		if err != nil {
+			log.Fatalf("TODO: handle form parse error.\n%v", err)
+		}
+		fmt.Printf(">> %v\n", r.MultipartForm.File)
+
+		files, ok := r.MultipartForm.File["attachments"]
+		if !ok {
+			log.Fatalf("TODO: attachments form input not found")
+		}
+
+		for _, fileHeader := range files {
+			file, err := fileHeader.Open()
+			defer file.Close()
+			if err != nil {
+				log.Fatalf("open multipart file %s: %s", fileHeader.Filename, err)
+			}
+			fileData, err := io.ReadAll(file)
+			if err != nil {
+				log.Fatalf("copy multipart file %s: %s", fileHeader.Filename, err)
+			}
+			attm := &models.Attachment{
+				Name:   fileHeader.Filename,
+				Data:   fileData,
+				PostId: postId,
+			}
+			err = attm.Create()
+			if err != nil {
+				log.Fatalf("create attachment in db: %v: %s", attm, err)
+			}
+		}
+	}
+
+	attachments := models.QueryAttachments(postId)
+	err = tmpls.Attachments.Execute(w, struct {
+		Paths       *PathDefs
+		CsrfTag     template.HTML
+		Site        *models.Site
+		Msg         string
+		Post        *models.Post
+		Attachments []models.Attachment
 	}{
-		Paths:   Paths,
-		CsrfTag: csrfTag,
-		Site:    models.QuerySite(),
+		Paths:       Paths,
+		CsrfTag:     csrfTag,
+		Site:        models.QuerySite(),
+		Post:        post,
+		Attachments: attachments,
 	})
 	if err != nil {
 		log.Fatal(err)

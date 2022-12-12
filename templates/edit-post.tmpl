@@ -23,12 +23,13 @@
 
   <details>
     <summary>
-      <b>Attachments (2)</b>
-      <a style="float:right;" href="">Manage</a>
+      <b>Attachments ({{len .Attachments}})</b>
+      <a style="float:right;" href="{{.Paths.AttachmentsOfPost .Post.Id}}">Manage</a>
     </summary>
     <ul>
-      <li><a target="_blank" href="">file1.jpg</a></li>
-      <li><a target="_blank" href="">file2.jpg</a></li>
+      {{range .Attachments}}
+      <li><a target="_blank" href="">{{.Name}}</a> {{.Size}}</li>
+      {{end}}
     </ul>
   </details>
 

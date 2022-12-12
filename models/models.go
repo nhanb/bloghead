@@ -301,9 +301,56 @@ func ClearNeocities() error {
 }
 
 type Attachment struct {
-	Id      int64
-	Name    string
-	Data    []byte
-	Content string
-	PostId  int64
+	Id     int64
+	Name   string
+	Data   []byte
+	PostId int64
+}
+
+func QueryAttachments(postId int64) (attms []Attachment) {
+	rows, err := db.Query(
+		"select id, name, data from attachment where post_id=? order by id desc;",
+		postId,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var a Attachment
+		err = rows.Scan(&a.Id, &a.Name, &a.Data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		a.PostId = postId
+		attms = append(attms, a)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return attms
+}
+
+func (a *Attachment) Create() error {
+	if a.Id != 0 {
+		log.Fatalf("Calling Create() on existing Attachment: %v", a)
+	}
+	result, err := db.Exec(
+		"insert into attachment (name, data, post_id) values (?,?,?);",
+		a.Name, a.Data, a.PostId,
+	)
+	if err != nil {
+		return err
+	}
+
+	a.Id, err = result.LastInsertId()
+	return err
+}
+
+func (a *Attachment) Size() string {
+	inBytes := len(a.Data)
+	inKiB := inBytes / 1024
+	return fmt.Sprintf("%d KiB", inKiB)
 }
