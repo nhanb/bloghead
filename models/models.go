@@ -333,6 +333,29 @@ func QueryAttachments(postId int64) (attms []Attachment) {
 	return attms
 }
 
+func QueryAttachment(postSlug string, fileName string) (*Attachment, error) {
+	rows, err := db.Query(
+		"select a.id, a.data, a.post_id from attachment a"+
+			"\n inner join post p on p.id = a.post_id"+
+			"\n where p.slug=? and a.name=?;",
+		postSlug, fileName,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	found := rows.Next()
+	if !found {
+		return nil, errors.New(fmt.Sprintf("attachment %s/%s not found.", postSlug, fileName))
+	}
+	var a Attachment
+	rows.Scan(&a.Id, &a.Data, &a.PostId)
+	a.Name = fileName
+	return &a, nil
+
+}
+
 func (a *Attachment) Create() error {
 	if a.Id != 0 {
 		log.Fatalf("Calling Create() on existing Attachment: %v", a)

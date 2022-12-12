@@ -28,7 +28,7 @@
     </summary>
     <ul>
       {{range .Attachments}}
-      <li><a target="_blank" href="">{{.Name}}</a> {{.Size}}</li>
+      <li><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a> {{.Size}}</li>
       {{end}}
     </ul>
   </details>

@@ -33,7 +33,7 @@
   <tbody>
     {{range .Attachments}}
     <tr>
-      <td><a target="_blank" href="">{{.Name}}</a></td>
+      <td><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a></td>
       <td>{{.Size}}</td>
       <td>
         <a href="">delete</a>

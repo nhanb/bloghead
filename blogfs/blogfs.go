@@ -63,9 +63,28 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 		}
 	}
 
-	_, err := models.GetPostBySlug(name)
-	if err == nil {
+	fmt.Println(">>", name)
+	parts := strings.Split(name, "/")
+
+	switch len(parts) {
+	case 1:
+		_, err := models.GetPostBySlug(name)
+		if err != nil {
+			return nil, fs.ErrNotExist
+		}
 		return &blogFile{isDir: true}, nil
+
+	case 2:
+		postSlug, fileName := parts[0], parts[1]
+		attachment, err := models.QueryAttachment(postSlug, fileName)
+		if err != nil {
+			fmt.Printf("query attachment: %s", err)
+			return nil, fs.ErrNotExist
+		}
+		return &blogFile{
+			name:    attachment.Name,
+			content: attachment.Data,
+		}, nil
 	}
 
 	return nil, fs.ErrNotExist
