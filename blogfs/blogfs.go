@@ -71,7 +71,7 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 		if err != nil {
 			return nil, fs.ErrNotExist
 		}
-		return &blogFile{isDir: true}, nil
+		return &blogFile{name: name, isDir: true}, nil
 
 	case 2:
 		postSlug, fileName := parts[0], parts[1]
@@ -154,6 +154,7 @@ func (f *blogFile) Stat() (fs.FileInfo, error) {
 // TODO: optimize pagination. Currently if caller makes use of the "n" param
 // then we'll be querying the same thing on each iteration.
 func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
+	fmt.Println("ReadDir:", f.name)
 	if !f.isDir {
 		return nil, errors.New(fmt.Sprintf("%s is a file, not a dir!", f.name))
 	}
@@ -164,6 +165,14 @@ func (f *blogFile) ReadDir(n int) ([]fs.DirEntry, error) {
 			children = append(children, &blogFile{
 				name:  slug,
 				isDir: true,
+			})
+		}
+
+	} else {
+		for _, attachment := range models.QueryAttachmentsBySlug(f.name) {
+			children = append(children, &blogFile{
+				name:  attachment.Name,
+				isDir: false,
 			})
 		}
 	}

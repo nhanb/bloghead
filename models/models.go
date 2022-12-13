@@ -307,9 +307,12 @@ type Attachment struct {
 	PostId int64
 }
 
+// TODO: maybe replace all usage of this with QueryAttachmentsBySlug()?
+// It will require editor urls to use slug intead of post id, which still
+// makes sense.
 func QueryAttachments(postId int64) (attms []Attachment) {
 	rows, err := db.Query(
-		"select id, name, data from attachment where post_id=? order by id desc;",
+		"select id, name, data from attachment where post_id=? order by name;",
 		postId,
 	)
 	if err != nil {
@@ -323,6 +326,33 @@ func QueryAttachments(postId int64) (attms []Attachment) {
 			log.Fatal(err)
 		}
 		a.PostId = postId
+		attms = append(attms, a)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return attms
+}
+
+func QueryAttachmentsBySlug(postSlug string) (attms []Attachment) {
+	rows, err := db.Query(
+		"select a.id, a.name, a.data, a.post_id from attachment a"+
+			"\n inner join post p on p.id = a.post_id"+
+			"\n where p.slug=? order by a.name;",
+		postSlug,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var a Attachment
+		err = rows.Scan(&a.Id, &a.Name, &a.Data, &a.PostId)
+		if err != nil {
+			log.Fatal(err)
+		}
 		attms = append(attms, a)
 	}
 	err = rows.Err()
