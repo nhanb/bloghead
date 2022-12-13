@@ -7,7 +7,7 @@
   <legend><b>Upload</b></legend>
   <form method="post" enctype="multipart/form-data">
     <div>
-      <input type="file" multiple name="attachments" id="attachments">
+      <input type="file" required multiple name="attachments" id="attachments">
     </div>
 
     {{.CsrfTag}}
@@ -36,7 +36,10 @@
       <td><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a></td>
       <td>{{.Size}}</td>
       <td>
-        <a href="">delete</a>
+        <form action="delete" method="post" style="display:inline;">
+          <input type="hidden" name="attachment-id" value={{.Id}}>
+          <span><input type="submit" value="delete"></span>
+        </form>
       </td>
     </tr>
     {{end}}
@@ -47,9 +50,16 @@
 
 <style>
   input[type="file"] {
-    /*border: 1px solid #bbb;*/
     border-radius: 4px;
     background-color: #ddd;
+  }
+
+  form[action="delete"] input[type=submit] {
+    padding: 2px 4px;
+  }
+
+  table {
+    table-layout: fixed;
   }
 </style>
 {{end}}

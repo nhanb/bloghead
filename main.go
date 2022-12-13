@@ -52,7 +52,7 @@ func (p *PathDefs) EditPostWithId(id int64) string {
 	return fmt.Sprintf("%s%d", p.EditPost, id)
 }
 func (p *PathDefs) AttachmentsOfPost(id int64) string {
-	return fmt.Sprintf("%s%d", p.Attachments, id)
+	return fmt.Sprintf("%s%d/", p.Attachments, id)
 }
 func (p *PathDefs) AttachmentPreview(postSlug string, filename string) string {
 	return fmt.Sprintf("%s%s/%s", p.Preview, postSlug, filename)

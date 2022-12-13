@@ -21,7 +21,7 @@
         pattern="^[\w\-\.\~]+$" />
   </label>
 
-  <details>
+  <details open>
     <summary>
       <b>Attachments ({{len .Attachments}})</b>
       <a style="float:right;" href="{{.Paths.AttachmentsOfPost .Post.Id}}">Manage</a>
@@ -76,6 +76,10 @@ details > summary {
 details {
     background-color: #f7f7f7;
     border: 1px solid #ccc;
+}
+details ul {
+    list-style: none;
+    padding: 0 1rem;
 }
 </style>
 {{end}}
