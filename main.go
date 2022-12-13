@@ -806,5 +806,8 @@ func main() {
 		openInBrowser(fmt.Sprintf("http://localhost:%d", flags.Port))
 	}
 
+	cleanUpDjotbin := blogfs.CreateDjotbin()
+	defer cleanUpDjotbin()
+
 	wg.Wait()
 }

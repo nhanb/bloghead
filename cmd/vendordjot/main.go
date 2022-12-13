@@ -9,15 +9,6 @@ import (
 const OutPath = "blogfs/djot.lua"
 
 var LuaModules = []string{
-	//"djot",
-	//"djot.ast",
-	//"djot.attributes",
-	//"djot.block",
-	//"djot.emoji",
-	//"djot.html",
-	//"djot.inline",
-	//"djot.json",
-	//"djot.match",
 	"djot.attributes",
 	"djot.inline",
 	"djot.block",
@@ -71,15 +62,9 @@ func main() {
 		outfile.WriteString("\nend\n\n")
 	}
 
-	_, err = outfile.WriteString(
-		`local djot = require("djot")
-function djot_to_html (input)
-    local djot = require("djot")
-    local doc = djot.parse(input)
-    local html = djot.render_html(doc)
-    return html
-end
-`)
+	luaContent, err := os.ReadFile("djot/bin/main.lua")
+	check(err)
+	_, err = outfile.Write(luaContent)
 	check(err)
 }
 

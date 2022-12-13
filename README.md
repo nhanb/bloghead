@@ -21,6 +21,7 @@ architectureastronomyphobia.
 Current dev dependencies:
 
 - [go](https://go.dev/)
+- [luastatic](https://github.com/ers35/luastatic): to compile djot - I installed it using luarocks.
 - (optional) [entr](https://eradman.com/entrproject/): for `make watch`
 - (optional) [mingw-w64](https://archlinux.org/groups/x86_64/mingw-w64/): to
   cross-compile from Linux to Windows.

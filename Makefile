@@ -1,4 +1,4 @@
-.PHONY : build linux windows run watch watch-build init-db clean watch-tk
+.PHONY : build linux windows run watch watch-build init-db clean watch-tk blogfs/djotbin blogfs/djotbin.exe
 
 build:
 	go build -o dist/
@@ -40,3 +40,23 @@ blogfs/djot.lua: djot/* cmd/vendordjot/*
 bloghead.syso: favicon.ico
 	# needs `go install github.com/akavel/rsrc@latest`
 	~/go/bin/rsrc -ico favicon.ico -o bloghead.syso
+
+# Unfortunately Arch Linux doesn't provide static libs (.a),
+# so for dev purposes I have to dynamically link to liblua:
+# 	https://github.com/ers35/luastatic/issues/21
+# The CI build is statically linked though.
+blogfs/djotbin: blogfs/djot.lua
+	cd blogfs; luastatic\
+		djot.lua\
+		-llua\
+		-I/usr/include\
+		-o djotbin
+	rm blogfs/djot.luastatic.c
+
+blogfs/djotbin.exe: blogfs/djot.lua
+	cd blogfs; CC=x86_64-w64-mingw32-gcc luastatic\
+		djot.lua\
+		../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
+		-I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
+		-o djotbin.exe -static
+	rm blogfs/djot.luastatic.c

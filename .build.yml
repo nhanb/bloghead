@@ -4,8 +4,25 @@ packages:
   - curl
   - gcc
   - mingw-w64
+  - luarocks
 
 tasks:
+  - build-djotbin: |
+      luarocks install luastatic --local
+      cd bloghead/blogfs
+      ~/.luarocks/bin/luastatic\
+        djot.lua\
+        /usr/lib/x86_64-linux-gnu/liblua5.1.a\
+        -I /usr/include/lua5.1\
+        -o djotbin
+
+  - build-djotbin-exe: |
+      cd bloghead/djot
+      CC=x86_64-w64-mingw32-gcc ~/.luarocks/bin/luastatic\
+        djot.lua\
+        ../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
+        -I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
+        -o djotbin.exe -static
 
   - build-bloghead: |
       curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz

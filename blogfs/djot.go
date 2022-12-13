@@ -2,31 +2,65 @@ package blogfs
 
 import (
 	_ "embed"
+	"fmt"
 	"html/template"
-
-	lua "github.com/yuin/gopher-lua"
+	"io"
+	"io/fs"
+	"log"
+	"os"
+	"os/exec"
+	"path"
+	"runtime"
 )
 
-//go:embed djot.lua
-var djotlua string
+var tmpDjotbinPath string
 
-var ls *lua.LState
+func djotToHtml(djotText string) template.HTML {
+	cmd := exec.Command(tmpDjotbinPath)
 
-func djotToHtml(input string) template.HTML {
-	if ls == nil {
-		ls = lua.NewState()
-		if err := ls.DoString(djotlua); err != nil {
-			panic(err)
-		}
+	stdin, err := cmd.StdinPipe()
+	check(err)
+
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, djotText)
+	}()
+
+	out, err := cmd.Output()
+	check(err)
+
+	return template.HTML(out)
+}
+
+// Writes the embeded djotbin executable into a temp file, overwriting any
+// existing file to make sure we always have the most up-to-date version.
+//
+// Returns a cleanup function that caller must then call on shutdown.
+func CreateDjotbin() (cleanup func()) {
+	tmpDjotbinPath = path.Join(os.TempDir(), "bloghead-djotbin")
+	if runtime.GOOS == "windows" {
+		// Windows wouldn't let me exec a file without an exe extension
+		tmpDjotbinPath += ".exe"
 	}
-	if err := ls.CallByParam(lua.P{
-		Fn:      ls.GetGlobal("djot_to_html"),
-		NRet:    1,
-		Protect: true,
-	}, lua.LString(input)); err != nil {
-		panic(err)
+
+	os.Remove(tmpDjotbinPath)
+	tmpFile, err := os.Create(tmpDjotbinPath)
+	check(err)
+	defer tmpFile.Close()
+	_, err = tmpFile.Write(djotbin)
+	check(err)
+	err = tmpFile.Chmod(fs.FileMode(0700))
+	check(err)
+	tmpDjotbinPath = tmpFile.Name()
+
+	return func() {
+		fmt.Println("Cleaning up")
+		os.Remove(tmpDjotbinPath)
 	}
-	ret := ls.Get(-1) // returned value
-	ls.Pop(1)         // remove received value
-	return template.HTML(ret.String())
+}
+
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }

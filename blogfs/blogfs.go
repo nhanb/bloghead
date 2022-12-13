@@ -63,7 +63,6 @@ func (b *BlogFS) Open(name string) (fs.File, error) {
 		}
 	}
 
-	fmt.Println(">>", name)
 	parts := strings.Split(name, "/")
 
 	switch len(parts) {
