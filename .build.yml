@@ -15,14 +15,16 @@ tasks:
         /usr/lib/x86_64-linux-gnu/liblua5.1.a\
         -I /usr/include/lua5.1\
         -o djotbin
+      rm djot.luastatic.c
 
   - build-djotbin-exe: |
-      cd bloghead/djot
+      cd bloghead/blogfs
       CC=x86_64-w64-mingw32-gcc ~/.luarocks/bin/luastatic\
         djot.lua\
         ../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
         -I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
         -o djotbin.exe -static
+      rm djot.luastatic.c
 
   - build-bloghead: |
       curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz
@@ -37,3 +39,5 @@ tasks:
 artifacts:
   - bloghead/dist/bloghead
   - bloghead/dist/bloghead.exe
+  - bloghead/blogfs/djotbin
+  - bloghead/blogfs/djotbin.exe
