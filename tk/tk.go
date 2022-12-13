@@ -3,15 +3,13 @@ package tk
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
-	"io/fs"
 	"log"
-	"os"
 	"os/exec"
-	"path"
 	"runtime"
 	"strings"
+
+	"go.imnhan.com/bloghead/common"
 )
 
 var tmpTclPath string
@@ -93,41 +91,6 @@ func execTcl(script string) string {
 	return strings.TrimSpace(string(out))
 }
 
-// Writes the embeded tcl executable into a temp file.
-// If file already exists with correct size, do nothing.
 func EnsureTclBin() {
-	tmpTclPath = path.Join(os.TempDir(), "bloghead-tcl")
-	if runtime.GOOS == "windows" {
-		// Windows wouldn't let me exec a file without an exe extension
-		tmpTclPath += ".exe"
-	}
-
-	info, err := os.Stat(tmpTclPath)
-	if err == nil && !info.IsDir() {
-		// Since the file name is already prefixed with "bloghead-", it's
-		// practically impossible for any other file to accidentally exist
-		// under the same name _and_ size. Saves us some CPU cycles (and more
-		// importantly, startup time) for skipping checksum.
-		if info.Size() == int64(len(tclbin)) {
-			fmt.Println("Found existing", tmpTclPath)
-			return
-		}
-	}
-
-	os.Remove(tmpTclPath)
-	tmpFile, err := os.Create(tmpTclPath)
-	if err != nil {
-		panic(err)
-	}
-	defer tmpFile.Close()
-	_, err = tmpFile.Write(tclbin)
-	if err != nil {
-		panic(err)
-	}
-	err = tmpFile.Chmod(fs.FileMode(0700))
-	if err != nil {
-		panic(err)
-	}
-	tmpTclPath = tmpFile.Name()
-	fmt.Println("Created", tmpTclPath)
+	tmpTclPath = common.EnsureExecutable(tclbin, "tcl")
 }

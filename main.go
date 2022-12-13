@@ -800,14 +800,13 @@ func main() {
 	models.SetDbFile(Paths.InputFile)
 	defer models.Close()
 
+	blogfs.EnsureDjotBin()
+
 	// This must run after the socket starts listening,
 	// otherwise we risk opening an empty page.
 	if !flags.NoBrowser {
 		openInBrowser(fmt.Sprintf("http://localhost:%d", flags.Port))
 	}
-
-	cleanUpDjotbin := blogfs.CreateDjotbin()
-	defer cleanUpDjotbin()
 
 	wg.Wait()
 }
