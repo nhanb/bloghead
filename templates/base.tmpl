@@ -145,17 +145,21 @@
 // Pardon the ancient style JS spaghetti - I want this script to be as
 // compatible as possible without any transpilation mess.
 
+var onsubmitSpinnerClass = "onsubmit-spinner";
+
 function appendLoadingIcon(target) {
     var icon = document.createElement("span");
+    icon.classList.add(onsubmitSpinnerClass);
     icon.appendChild(document.createTextNode("⧖"));
-    target.parentNode.insertBefore(icon, target.nextSibling);
     icon.style.animation = "spinner 1s linear infinite";
     icon.style.display = "inline-block";
     icon.style.marginLeft = "0.5rem";
     icon.style.color = "grey";
+    target.parentNode.insertBefore(icon, target.nextSibling);
 }
 
 (function visualCueWhenSubmittingForm(){
+    // disable "submit" buttons and show loading spinner
     var forms = document.getElementsByTagName("form");
     for (var i = 0; i < forms.length; i++) {
         forms[i].addEventListener("submit", function(evt){
@@ -176,6 +180,22 @@ function appendLoadingIcon(target) {
             }
         });
     }
+
+    // put things back to normal when user presses Back on their browser
+    addEventListener('pageshow', function(){
+        var inputs = document.getElementsByTagName("input");
+        for (var j = 0; j < inputs.length; j++) {
+            var inp = inputs[j];
+            if (inp.getAttribute("type") === "submit") {
+                inp.removeAttribute("disabled");
+            }
+        }
+        var spinners = document.getElementsByClassName(onsubmitSpinnerClass);
+        for (var i = 0; i < spinners.length; i++) {
+            spinners[i].remove();
+        }
+
+    });
 })();
 </script>
 
