@@ -59,14 +59,8 @@
   {{.CsrfTag}}
 
   <div style="grid-area:submit">
-    <input type="submit" value="{{.SubmitText}}" />
-    {{if .Msg}}
-    <span id="msg">
-        {{.Msg}}
-        — <a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">preview here</a>
-    </span>
-    {{end}}
-
+    <input type="submit" value="Save" />
+    {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
     {{if .ErrMsg}}<span id="err-msg">Error: {{.ErrMsg}}</span>{{end}}
   </div>
 </form>

@@ -20,7 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"fyne.io/systray"
 	"go.imnhan.com/bloghead/blogfs"
@@ -209,7 +208,7 @@ func newPostHandler(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(
 				w, r,
 				Paths.EditPostWithId(post.Id)+"?msg="+url.QueryEscape(
-					fmt.Sprintf("Successfully created post #%d", post.Id),
+					fmt.Sprintf("Successfully created post #%d.", post.Id),
 				),
 				http.StatusSeeOther,
 			)
@@ -272,7 +271,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		post.IsDraft = r.FormValue("is-draft") != ""
 		err := post.Update()
 		if err == nil {
-			msg = fmt.Sprintf("Updated at %s", post.UpdatedAt.Local().Format("3:04:05 PM"))
+			msg = "Successfully saved."
 		} else {
 			errMsg = err.Error()
 		}
@@ -288,7 +287,6 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		ErrMsg      string
 		Post        models.Post
 		Title       string
-		SubmitText  string
 		ActionPath  string
 		DraftHint   string
 		Attachments []models.Attachment
@@ -299,7 +297,6 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		ErrMsg:      errMsg,
 		Post:        *post,
 		Title:       fmt.Sprintf("Editing post: %s", post.Title),
-		SubmitText:  "Update",
 		ActionPath:  r.URL.Path,
 		DraftHint:   DraftHint,
 		Attachments: models.QueryAttachments(postId),
@@ -450,7 +447,7 @@ func settingsHandler(w http.ResponseWriter, r *http.Request) {
 			Tagline: r.FormValue("tagline"),
 		}
 		site.Update()
-		msg = fmt.Sprintf("Saved at %s", time.Now().Format("3:04:05 PM"))
+		msg = "Successfully saved."
 	}
 
 	err := tmpls.Settings.Execute(w, struct {
@@ -516,10 +513,7 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 				errMsg = err.Error()
 			} else {
 				models.UpdateExportTo(exportTo)
-				msg = fmt.Sprintf(
-					"Exported successfully at %s",
-					time.Now().Format("3:04:05 PM"),
-				)
+				msg = "Successfully exported."
 			}
 		} else {
 			w.WriteHeader(http.StatusBadRequest)
@@ -656,7 +650,7 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err.Error()
 			}
-			msg = "Confirmed valid credentials."
+			msg = "Successfully confirmed & saved credentials."
 			return ""
 		}()
 	}
