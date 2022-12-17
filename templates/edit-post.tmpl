@@ -236,20 +236,29 @@ function debounce(callback, wait) {
   const contentEl = document.getElementById("content");
 
   const fields = [
-    {el: titleEl, originalValue: titleEl.value},
-    {el: slugEl, originalValue: slugEl.value},
-    {el: contentEl, originalValue: contentEl.value},
+    { el: titleEl, originalValue: {{.Post.Title}} },
+    { el: slugEl, originalValue: {{.Post.Slug}} },
+    { el: contentEl, originalValue: {{.Post.Content}}.replaceAll("\r\n", "\n") },
   ];
+
+  function highlightIfChanged(el, originalValue) {
+    if (el.value != originalValue) {
+      el.style.backgroundColor = "cornsilk";
+    } else {
+      el.style.backgroundColor = null;
+    }
+  }
 
   // Check and highlight changed field as user types.
   fields.forEach(({el, originalValue}) => {
     el.addEventListener('keyup', () => {
-      if (el.value != originalValue) {
-        el.style.backgroundColor = "cornsilk";
-      } else {
-        el.style.backgroundColor = null;
-      }
+      highlightIfChanged(el, originalValue);
     });
+
+    // On Firefox, when user changes some values, navigates away, then presses Back on their browser, we end up with
+    // still dirty field values, but the highlights are gone. Fortunately this script is still executed when user
+    // presses Back, so let's manually trigger the highlights here:
+    highlightIfChanged(el, originalValue);
   });
 
   // When user tries to leave (i.e. close tab or navigate away), open a warning prompt
