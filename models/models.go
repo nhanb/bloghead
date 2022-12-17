@@ -250,6 +250,12 @@ func processAttachmentError(err error) error {
 		if strings.HasPrefix(errmsg, "UNIQUE constraint failed") {
 			return errors.New("duplicate attachment name.")
 		}
+	case sqlite3.ErrConstraintCheck:
+		match := regexpErrMsg.FindStringSubmatch(errmsg)
+		if len(match) > 0 {
+			column := match[1]
+			return errors.New(fmt.Sprintf(`%s has invalid format.`, column))
+		}
 	}
 
 	return err
