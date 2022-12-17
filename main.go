@@ -323,37 +323,47 @@ func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var msg, errMsg string
+
 	if r.Method == "POST" {
-		err := r.ParseMultipartForm(50 * 1024 * 1024)
-		if err != nil {
-			log.Fatalf("TODO: handle form parse error.\n%v", err)
-		}
-		fmt.Printf(">> %v\n", r.MultipartForm.File)
+		var numFiles int
+		errMsg = (func() string {
+			err := r.ParseMultipartForm(50 * 1024 * 1024)
+			if err != nil {
+				return fmt.Sprintf("Multipart form parse error: %v", err)
+			}
 
-		files, ok := r.MultipartForm.File["attachments"]
-		if !ok {
-			log.Fatalf("TODO: attachments form input not found")
-		}
+			files, ok := r.MultipartForm.File["attachments"]
+			if !ok {
+				return "No files selected."
+			}
 
-		for _, fileHeader := range files {
-			file, err := fileHeader.Open()
-			defer file.Close()
-			if err != nil {
-				log.Fatalf("open multipart file %s: %s", fileHeader.Filename, err)
+			for _, fileHeader := range files {
+				file, err := fileHeader.Open()
+				defer file.Close()
+				if err != nil {
+					log.Fatalf("open multipart file %s: %s", fileHeader.Filename, err)
+				}
+				fileData, err := io.ReadAll(file)
+				if err != nil {
+					log.Fatalf("copy multipart file %s: %s", fileHeader.Filename, err)
+				}
+				attm := &models.Attachment{
+					Name:   fileHeader.Filename,
+					Data:   fileData,
+					PostId: postId,
+				}
+				err = attm.Create()
+				if err != nil {
+					log.Fatalf("create attachment in db: %v: %s", attm, err)
+				}
+				numFiles += 1
 			}
-			fileData, err := io.ReadAll(file)
-			if err != nil {
-				log.Fatalf("copy multipart file %s: %s", fileHeader.Filename, err)
-			}
-			attm := &models.Attachment{
-				Name:   fileHeader.Filename,
-				Data:   fileData,
-				PostId: postId,
-			}
-			err = attm.Create()
-			if err != nil {
-				log.Fatalf("create attachment in db: %v: %s", attm, err)
-			}
+			return ""
+		})()
+
+		if errMsg == "" {
+			msg = fmt.Sprintf("Successfully uploaded %d files.", numFiles)
 		}
 	}
 
@@ -363,6 +373,7 @@ func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
 		CsrfTag     template.HTML
 		Site        *models.Site
 		Msg         string
+		ErrMsg      string
 		Post        *models.Post
 		Attachments []models.Attachment
 	}{
@@ -371,6 +382,8 @@ func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
 		Site:        models.QuerySite(),
 		Post:        post,
 		Attachments: attachments,
+		Msg:         msg,
+		ErrMsg:      errMsg,
 	})
 	if err != nil {
 		log.Fatal(err)

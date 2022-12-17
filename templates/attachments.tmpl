@@ -15,6 +15,7 @@
     <div>
       <input type="submit" value="Upload" />
       {{if .Msg}}<span id="msg">{{.Msg}}</span>{{end}}
+      {{if .ErrMsg}}<span id="err-msg">{{.ErrMsg}}</span>{{end}}
     </div>
   </form>
 </fieldset>
