@@ -5,7 +5,12 @@
 
   <div style="grid-area:header">
     <h1 style="display:inline; margin-right:1rem;">Edit post</h1>
-    <a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">preview</a>
+    <label title="{{.DraftHint}}" for="is-draft">
+      <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
+        id="is-draft" name="is-draft" value="is-draft">
+      Draft
+    </label>
+    &ensp;| <a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">preview</a>
   </div>
 
   <label for="title" style="grid-area:title">
@@ -36,7 +41,7 @@
     </div>
   </div>
 
-  <label for="content" style="grid-area:content;">
+  <label id="content-block" for="content" style="grid-area:content;">
     <span class="label-text">Content:</span>
     <span class="hint">
     we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax which is a more
@@ -46,12 +51,10 @@
     <textarea id="content" name="content" style="resize:none;" required>{{.Post.Content}}</textarea>
   </label>
 
-  <div style="grid-area:draft">
-    <label title="{{.DraftHint}}" for="is-draft">
-      <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
-        id="is-draft" name="is-draft" value="is-draft">
-      Draft
-    </label>
+  <div id="preview-block" style="grid-area:preview;">
+    <span class="label-text">Live preview:</span><br/>
+    <span class="hint">&nbsp;</span>
+    <div id="live-preview"></div>
   </div>
 
   {{.CsrfTag}}
@@ -82,16 +85,36 @@ form {
     "title attachments"
     "slug attachments"
     "content preview"
-    "draft draft"
     "submit submit";
 }
 
-label[for="content"] {
+#content-block, #preview-block {
   display: flex;
   flex-direction: column;
 }
-textarea#content {
+#content-block textarea,
+#preview-block #live-preview {
   flex-grow: 1;
+}
+
+#live-preview {
+  border: 2px solid;
+  border-radius: 7px;
+  padding: 0.5rem;
+}
+#live-preview h1,
+#live-preview h2,
+#live-preview h3,
+#live-preview h4 {
+  margin: 0;
+}
+#live-preview pre {
+  background-color: #eaeaea;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid grey;
+}
+#live-preview > * {
+  max-width: 100%;
 }
 
 #attachments-block {
@@ -120,24 +143,24 @@ textarea#content {
 
 <script>
 function insertAtCursor(myField, myValue) {
-    //IE support
-    if (document.selection) {
-        myField.focus();
-        sel = document.selection.createRange();
-        sel.text = myValue;
-    }
-    //MOZILLA and others
-    else if (myField.selectionStart || myField.selectionStart == '0') {
-        var startPos = myField.selectionStart;
-        var endPos = myField.selectionEnd;
-        myField.value = myField.value.substring(0, startPos)
-            + myValue
-            + myField.value.substring(endPos, myField.value.length);
-        myField.selectionStart = startPos + myValue.length;
-        myField.selectionEnd = startPos + myValue.length;
-    } else {
-        myField.value += myValue;
-    }
+  //IE support
+  if (document.selection) {
+    myField.focus();
+    sel = document.selection.createRange();
+    sel.text = myValue;
+  }
+  //MOZILLA and others
+  else if (myField.selectionStart || myField.selectionStart == '0') {
+    var startPos = myField.selectionStart;
+    var endPos = myField.selectionEnd;
+    myField.value = myField.value.substring(0, startPos)
+      + myValue
+      + myField.value.substring(endPos, myField.value.length);
+    myField.selectionStart = startPos + myValue.length;
+    myField.selectionEnd = startPos + myValue.length;
+  } else {
+    myField.value += myValue;
+  }
 }
 
 function insertAttachmentToContent(e) {
@@ -147,5 +170,32 @@ function insertAttachmentToContent(e) {
   insertAtCursor(inputEl, fileName);
   inputEl.focus();
 }
+
+// Live preview: auto update as user types content.
+(function (){
+  const DJOT_TO_HTML = '{{.Paths.DjotToHtml}}';
+  const contentEl = document.querySelector("#content");
+  const previewEl = document.querySelector("#live-preview");
+
+  const debounce = (callback, wait) => {
+    let timeoutId = null;
+    return (...args) => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        callback.apply(null, args);
+      }, wait);
+    };
+  }
+
+  const updateLivePreview = () => {
+    fetch(DJOT_TO_HTML, {method: 'POST', body: contentEl.value})
+      .then((response) => response.text())
+      .then((text) => { previewEl.innerHTML = text; });
+  };
+
+  contentEl.addEventListener("keyup", debounce(updateLivePreview, 250));
+
+  updateLivePreview();
+})();
 </script>
 {{end}}

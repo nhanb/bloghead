@@ -45,6 +45,7 @@ type PathDefs struct {
 	Publish           string
 	Neocities         string
 	NeocitiesClear    string
+	DjotToHtml        string
 
 	InputFile string
 }
@@ -61,6 +62,7 @@ var Paths = &PathDefs{
 	Publish:           "/publish",
 	Neocities:         "/publish/neocities",
 	NeocitiesClear:    "/publish/neocities/clear",
+	DjotToHtml:        "/djot-to-html",
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -677,6 +679,22 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func djotToHtmlHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("405 method not allowed."))
+		return
+	}
+
+	input, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Fatalf("read djot input: %v", err)
+	}
+
+	output := blogfs.DjotToHtml(string(input))
+	w.Write([]byte(output))
+}
+
 // Erases dest dir then copies everything from srcFS into dest.
 // It assumes dest dir already exists.
 func Export(srcFs fs.FS, dest string) error {
@@ -771,6 +789,7 @@ func handleAllPaths(srv *http.Server) {
 	http.HandleFunc(Paths.Publish, publishHandler)
 	http.HandleFunc(Paths.Neocities, neocitiesHandler)
 	http.HandleFunc(Paths.NeocitiesClear, neocitiesClearHandler)
+	http.HandleFunc(Paths.DjotToHtml, djotToHtmlHandler)
 }
 
 func main() {

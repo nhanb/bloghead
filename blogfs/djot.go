@@ -12,7 +12,7 @@ import (
 
 var tmpDjotbinPath string
 
-func djotToHtml(djotText string) template.HTML {
+func DjotToHtml(djotText string) template.HTML {
 	cmd := exec.Command(tmpDjotbinPath)
 
 	stdin, err := cmd.StdinPipe()

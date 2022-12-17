@@ -127,7 +127,7 @@ func postFile(p *models.Post, site *models.Site) fs.File {
 			Title:       p.Title,
 			Site:        site,
 			Post:        p,
-			HtmlContent: djotToHtml(p.Content),
+			HtmlContent: DjotToHtml(p.Content),
 		},
 	)
 	if err != nil {
