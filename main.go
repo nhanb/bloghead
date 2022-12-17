@@ -66,7 +66,7 @@ var Paths = &PathDefs{
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
-	return fmt.Sprintf("%s%d", p.EditPost, id)
+	return fmt.Sprintf("%s%d/", p.EditPost, id)
 }
 func (p *PathDefs) AttachmentsOfPost(id int64) string {
 	return fmt.Sprintf("%s%d/", p.Attachments, id)
@@ -242,7 +242,7 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validPath := regexp.MustCompile("^" + Paths.EditPost + `([0-9]+)$`)
+	validPath := regexp.MustCompile("^" + Paths.EditPost + `([0-9]+)/(.*)$`)
 	match := validPath.FindStringSubmatch(r.URL.Path)
 	if len(match) == 0 {
 		w.WriteHeader(http.StatusNotFound)
@@ -255,6 +255,12 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(err.Error()))
 		return
+	}
+
+	// small hack so that embedded attachments work in live prevew
+	if match[2] != "" {
+		previewPath := Paths.Preview + post.Slug + "/" + match[2]
+		http.Redirect(w, r, previewPath, http.StatusSeeOther)
 	}
 
 	var msg, errMsg string

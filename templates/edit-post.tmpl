@@ -44,15 +44,14 @@
   <label id="content-block" for="content" style="grid-area:content;">
     <span class="label-text">Content:</span>
     <span class="hint">
-    we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax which is a more
-    well-defined Markdown variant - here's a
+    we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax - here's a
     <a tabindex="-1" href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
     </span>
     <textarea id="content" name="content" style="resize:none;" required>{{.Post.Content}}</textarea>
   </label>
 
   <div id="preview-block" style="grid-area:preview;">
-    <span class="label-text">Live preview:</span><br/>
+    <span class="label-text">Live preview:</span>
     <span class="hint">&nbsp;</span>
     <div id="live-preview"></div>
   </div>
@@ -77,8 +76,8 @@ form {
   max-width: 100%;
   height: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto 1fr auto auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto auto 1fr auto;
   gap: 1rem;
   grid-template-areas:
     "header header"
@@ -101,6 +100,13 @@ form {
   border: 2px solid;
   border-radius: 7px;
   padding: 0.5rem;
+  width: 100%;
+  overflow-y: auto;
+  /* On firefox, without a concrete "height" value, this element will expand
+   * vertically beyond the viewport. Setting any height value makes it
+   * correctly grow to occupy all available space... for some reason.
+   */
+  height: 100px;
 }
 #live-preview h1,
 #live-preview h2,
@@ -108,13 +114,27 @@ form {
 #live-preview h4 {
   margin: 0;
 }
-#live-preview pre {
-  background-color: #eaeaea;
-  padding: 0.2rem 0.5rem;
-  border: 1px solid grey;
+#live-preview h1 {
+  font-size: 24px;
 }
-#live-preview > * {
+#live-preview h2 {
+  font-size: 20px;
+}
+#live-preview h3 {
+  font-size: 18px;
+}
+#live-preview pre {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  overflow-x: auto;
+}
+#live-preview * {
   max-width: 100%;
+}
+#live-preview img,
+#live-preview video {
+  max-height: 200px;
 }
 
 #attachments-block {
@@ -132,7 +152,7 @@ form {
   display: block;
   list-style: none;
   padding: 0.5rem 1rem;
-  overflow-y: scroll;
+  overflow-y: auto;
   flex-grow: 1;
 }
 #attachments-block-list a {
