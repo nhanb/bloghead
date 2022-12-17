@@ -37,7 +37,7 @@
       <td><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a></td>
       <td>{{.Size}}</td>
       <td>
-        <form action="{{$.Paths.AttachmentsDelete}}" method="post" style="display:inline;">
+        <form class="delete" action="{{$.Paths.AttachmentsDelete}}" method="post" style="display:inline;">
           <input type="hidden" name="post-slug" value={{$.Post.Slug}}>
           <input type="hidden" name="file-name" value={{.Name}}>
           <span><input type="submit" value="delete"></span>
@@ -57,7 +57,7 @@
     background-color: #ddd;
   }
 
-  form[action="delete"] input[type=submit] {
+  form.delete input[type=submit] {
     padding: 2px 4px;
   }
 

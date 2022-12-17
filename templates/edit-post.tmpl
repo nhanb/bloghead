@@ -1,18 +1,18 @@
 {{define "title"}}{{.Title}}{{end}}
 
 {{define "body"}}
-<h1>{{.Title}}</h1>
-
-{{if .Post.Slug}}
-<p><a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">Preview post</a></p>
-{{end}}
-
 <form action="{{.ActionPath}}" method="post">
-  <label for="title">
+
+  <div style="grid-area:header">
+    <h1 style="display:inline; margin-right:1rem;">Edit post</h1>
+    <a target="_blank" href="{{.Paths.Preview}}{{.Post.Slug}}/">preview</a>
+  </div>
+
+  <label for="title" style="grid-area:title">
     <span class="label-text">Title:</span><br />
     <input value="{{.Post.Title}}" type="text" name="title" id="title" required />
   </label>
-  <label for="slug">
+  <label for="slug" style="grid-area:slug">
     <span class="label-text">Slug:</span><br />
     <span class="hint">
         valid characters: a-z, A-Z, 0-9, hyphen, underscore, period, tilde
@@ -21,32 +21,32 @@
         pattern="^[\w\-\.\~]+$" />
   </label>
 
-  <details open>
-    <summary>
+  <div id="attachments-block" style="grid-area:attachments">
+    <div id="attachments-block-header">
       <b>Attachments ({{len .Attachments}})</b>
       <a style="float:right;" href="{{.Paths.AttachmentsOfPost .Post.Id}}">Manage</a>
-    </summary>
-    <ul>
+    </div>
+    <div id="attachments-block-list">
       {{if not .Attachments}}
       <p style="color: darkgray;">No attachments yet. Click "Manage" to add some!</p>
       {{end}}
       {{range .Attachments}}
-      <li><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a> {{.Size}}</li>
+      <a title="click to insert to post content" onclick="insertAttachmentToContent(event)">{{.Name}}</a>&ensp;
       {{end}}
-    </ul>
-  </details>
+    </div>
+  </div>
 
-  <label for="content">
-    <span class="label-text">Content:</span><br />
+  <label for="content" style="grid-area:content;">
+    <span class="label-text">Content:</span>
     <span class="hint">
     we use <a tabindex="-1" href="https://djot.net/">djot</a> syntax which is a more
     well-defined Markdown variant - here's a
     <a tabindex="-1" href="https://github.com/jgm/djot/blob/main/doc/cheatsheet.md">cheatsheet</a>
-    </span><br />
-    <textarea id="content" name="content" cols="30" rows="20" required>{{.Post.Content}}</textarea>
+    </span>
+    <textarea id="content" name="content" style="resize:none;" required>{{.Post.Content}}</textarea>
   </label>
 
-  <div>
+  <div style="grid-area:draft">
     <label title="{{.DraftHint}}" for="is-draft">
       <input type="checkbox" {{if .Post.IsDraft}}checked{{end}}
         id="is-draft" name="is-draft" value="is-draft">
@@ -56,7 +56,7 @@
 
   {{.CsrfTag}}
 
-  <div>
+  <div style="grid-area:submit">
     <input type="submit" value="{{.SubmitText}}" />
     {{if .Msg}}
     <span id="msg">
@@ -70,19 +70,82 @@
 </form>
 
 <style>
-details > summary {
-    background-color: #eaeaea;
-    padding: 0.5rem;
-    cursor: pointer;
-    user-select: none;
+form {
+  max-width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto 1fr auto auto;
+  gap: 1rem;
+  grid-template-areas:
+    "header header"
+    "title attachments"
+    "slug attachments"
+    "content preview"
+    "draft draft"
+    "submit submit";
 }
-details {
-    background-color: #f7f7f7;
-    border: 1px solid #ccc;
+
+label[for="content"] {
+  display: flex;
+  flex-direction: column;
 }
-details ul {
-    list-style: none;
-    padding: 0 1rem;
+textarea#content {
+  flex-grow: 1;
+}
+
+#attachments-block {
+  background-color: #f7f7f7;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  max-height: 10rem;
+}
+#attachments-block-header {
+  background-color: #eaeaea;
+  padding: 0.5rem;
+}
+#attachments-block-list {
+  display: block;
+  list-style: none;
+  padding: 0.5rem 1rem;
+  overflow-y: scroll;
+  flex-grow: 1;
+}
+#attachments-block-list a {
+  cursor: pointer;
+  user-select: none;
 }
 </style>
+
+<script>
+function insertAtCursor(myField, myValue) {
+    //IE support
+    if (document.selection) {
+        myField.focus();
+        sel = document.selection.createRange();
+        sel.text = myValue;
+    }
+    //MOZILLA and others
+    else if (myField.selectionStart || myField.selectionStart == '0') {
+        var startPos = myField.selectionStart;
+        var endPos = myField.selectionEnd;
+        myField.value = myField.value.substring(0, startPos)
+            + myValue
+            + myField.value.substring(endPos, myField.value.length);
+        myField.selectionStart = startPos + myValue.length;
+        myField.selectionEnd = startPos + myValue.length;
+    } else {
+        myField.value += myValue;
+    }
+}
+
+function insertAttachmentToContent(e) {
+  e.preventDefault();
+  var fileName = e.target.innerHTML;
+  var inputEl = document.getElementById("content");
+  insertAtCursor(inputEl, fileName);
+  inputEl.focus();
+}
+</script>
 {{end}}
