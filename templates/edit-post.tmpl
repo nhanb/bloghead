@@ -20,10 +20,10 @@
   <label for="slug" style="grid-area:slug">
     <span class="label-text">Slug:</span><br />
     <span class="hint">
-        valid characters: a-z, A-Z, 0-9, hyphen, underscore, period, tilde
+        valid characters: letters, numbers, hyphen, underscore, period, tilde
     </span><br />
     <input value="{{.Post.Slug}}" type="text" name="slug" id="slug" required
-        pattern="^[\w\-\.\~]+$" />
+        pattern="^[\w\-\.~]+$" />
   </label>
 
   <div id="attachments-block" style="grid-area:attachments">

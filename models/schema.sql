@@ -23,7 +23,7 @@ insert into site(id) values(0);
 
 create table post (
     id integer primary key,
-    slug text unique check (slug regexp '^[\w\-\.\~]+$') not null,
+    slug text unique check (slug regexp '^[\w\-\.~]+$') not null,
     title text unique not null,
     content text not null default '',
     created_at datetime not null default (strftime('%Y-%m-%d %H:%M:%SZ')),
@@ -33,7 +33,7 @@ create table post (
 
 create table attachment (
     id integer primary key,
-    name text not null check (name regexp '^[\w\-\.\~]+$'),
+    name text not null check (name regexp '^[\w\-\.~]+$'),
     data blob not null,
 
     post_id integer not null,
