@@ -30,6 +30,7 @@ func CsrfCheck(w http.ResponseWriter, r *http.Request) (csrfToken template.HTML)
 			Value:    generateSecureToken(32),
 			MaxAge:   60 * 60 * 24 * 7,
 			SameSite: http.SameSiteStrictMode,
+			Path:     "/",
 		}
 		http.SetCookie(w, csrfCookie)
 	} else if err != nil {

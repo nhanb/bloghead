@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	_ "embed"
@@ -238,6 +239,22 @@ func processPostError(err error) error {
 	return err
 }
 
+// Turns sqlite3 errors into user-friendly error messages.
+// Returns the error as-is if not recognized.
+func processAttachmentError(err error) error {
+	errno := err.(sqlite3.Error).ExtendedCode
+	errmsg := err.Error()
+
+	switch errno {
+	case sqlite3.ErrConstraintUnique:
+		if strings.HasPrefix(errmsg, "UNIQUE constraint failed") {
+			return errors.New("duplicate attachment name.")
+		}
+	}
+
+	return err
+}
+
 func CreateDbFile(fullPath string) error {
 	dir := filepath.Dir(fullPath)
 	stat, err := os.Stat(dir)
@@ -386,6 +403,13 @@ func QueryAttachment(postSlug string, fileName string) (*Attachment, error) {
 
 }
 
+func (a *Attachment) Delete() {
+	_, err := db.Exec("delete from attachment where id=?;", a.Id)
+	if err != nil {
+		log.Fatalf("delete attachment %d: %v", a.Id, err)
+	}
+}
+
 func (a *Attachment) Create() error {
 	if a.Id != 0 {
 		log.Fatalf("Calling Create() on existing Attachment: %v", a)
@@ -395,7 +419,7 @@ func (a *Attachment) Create() error {
 		a.Name, a.Data, a.PostId,
 	)
 	if err != nil {
-		return err
+		return processAttachmentError(err)
 	}
 
 	a.Id, err = result.LastInsertId()

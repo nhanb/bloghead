@@ -37,9 +37,11 @@
       <td><a target="_blank" href="{{$.Paths.AttachmentPreview $.Post.Slug .Name}}">{{.Name}}</a></td>
       <td>{{.Size}}</td>
       <td>
-        <form action="delete" method="post" style="display:inline;">
-          <input type="hidden" name="attachment-id" value={{.Id}}>
+        <form action="{{$.Paths.AttachmentsDelete}}" method="post" style="display:inline;">
+          <input type="hidden" name="post-slug" value={{$.Post.Slug}}>
+          <input type="hidden" name="file-name" value={{.Name}}>
           <span><input type="submit" value="delete"></span>
+          {{$.CsrfTag}}
         </form>
       </td>
     </tr>

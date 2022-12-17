@@ -34,18 +34,33 @@ const MsgCookie = "msg"
 const DraftHint = "A draft post won't be listed on your home page, but still accessible via direct link."
 
 type PathDefs struct {
-	Home           string
-	Settings       string
-	NewPost        string
-	EditPost       string
-	Attachments    string
-	Preview        string
-	Export         string
-	Publish        string
-	Neocities      string
-	NeocitiesClear string
+	Home              string
+	Settings          string
+	NewPost           string
+	EditPost          string
+	Attachments       string
+	AttachmentsDelete string
+	Preview           string
+	Export            string
+	Publish           string
+	Neocities         string
+	NeocitiesClear    string
 
 	InputFile string
+}
+
+var Paths = &PathDefs{
+	Home:              "/",
+	Settings:          "/settings",
+	NewPost:           "/new",
+	EditPost:          "/edit/",
+	Attachments:       "/attachments/",
+	AttachmentsDelete: "/attachments/delete",
+	Preview:           "/preview/",
+	Export:            "/export",
+	Publish:           "/publish",
+	Neocities:         "/publish/neocities",
+	NeocitiesClear:    "/publish/neocities/clear",
 }
 
 func (p *PathDefs) EditPostWithId(id int64) string {
@@ -68,19 +83,6 @@ func (p *PathDefs) GetPostIdFromAttachmentsPath(path string) (int64, error) {
 }
 func (p *PathDefs) InputFileName() string {
 	return filepath.Base(p.InputFile)
-}
-
-var Paths = &PathDefs{
-	Home:           "/",
-	Settings:       "/settings",
-	NewPost:        "/new",
-	EditPost:       "/edit/",
-	Attachments:    "/attachments/",
-	Preview:        "/preview/",
-	Export:         "/export",
-	Publish:        "/publish",
-	Neocities:      "/publish/neocities",
-	NeocitiesClear: "/publish/neocities/clear",
 }
 
 //go:embed templates
@@ -355,7 +357,7 @@ func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				err = attm.Create()
 				if err != nil {
-					log.Fatalf("create attachment in db: %v: %s", attm, err)
+					return fmt.Sprintf("Error uploading %s: %s", attm.Name, err)
 				}
 				numFiles += 1
 			}
@@ -388,6 +390,38 @@ func attachmentsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func attachmentsDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte("405 method not allowed."))
+		return
+	}
+
+	csrfTag := CsrfCheck(w, r)
+	if csrfTag == "" {
+		return
+	}
+
+	postSlug := r.FormValue("post-slug")
+	fileName := r.FormValue("file-name")
+
+	if postSlug == "" || fileName == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("empty post-slug/file-name."))
+		return
+	}
+
+	attm, err := models.QueryAttachment(postSlug, fileName)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("attachment not found."))
+		return
+	}
+
+	attm.Delete()
+	http.Redirect(w, r, Paths.AttachmentsOfPost(attm.PostId), http.StatusSeeOther)
 }
 
 func settingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -725,6 +759,7 @@ func handleAllPaths(srv *http.Server) {
 	http.HandleFunc(Paths.NewPost, newPostHandler)
 	http.HandleFunc(Paths.EditPost, editPostHandler)
 	http.HandleFunc(Paths.Attachments, attachmentsHandler)
+	http.HandleFunc(Paths.AttachmentsDelete, attachmentsDeleteHandler)
 	http.Handle(
 		Paths.Preview,
 		http.StripPrefix(
