@@ -1,7 +1,7 @@
 {{define "title"}}{{.Title}}{{end}}
 
 {{define "body"}}
-<form action="{{.ActionPath}}" method="post">
+<form id="edit-post-form" action="{{.ActionPath}}" method="post">
 
   <div style="grid-area:header">
     <h1 style="display:inline; margin-right:1rem;">Edit post</h1>
@@ -36,7 +36,7 @@
       <p style="color: darkgray;">No attachments yet. Click "Manage" to add some!</p>
       {{end}}
       {{range .Attachments}}
-      <a title="click to insert to post content" onclick="insertAttachmentToContent(event)">{{.Name}}</a>&ensp;
+      <a title="Click to insert file name into content" onclick="insertAttachmentToContent(event)">{{.Name}}</a>&ensp;
       {{end}}
     </div>
   </div>
@@ -206,21 +206,23 @@ function insertAttachmentToContent(e) {
   inputEl.focus();
 }
 
+
+function debounce(callback, wait) {
+  let timeoutId = null;
+  return (...args) => {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      callback.apply(null, args);
+    }, wait);
+  };
+}
+
+
 // Live preview: auto update as user types content.
 (function (){
   const DJOT_TO_HTML = '{{.Paths.DjotToHtml}}';
   const contentEl = document.querySelector("#content");
   const previewEl = document.querySelector("#live-preview");
-
-  const debounce = (callback, wait) => {
-    let timeoutId = null;
-    return (...args) => {
-      window.clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => {
-        callback.apply(null, args);
-      }, wait);
-    };
-  }
 
   const updateLivePreview = () => {
     fetch(DJOT_TO_HTML, {method: 'POST', body: contentEl.value})
@@ -231,6 +233,54 @@ function insertAttachmentToContent(e) {
   contentEl.addEventListener("keyup", debounce(updateLivePreview, 250));
 
   updateLivePreview();
+})();
+
+// Highlight unsaved changes & warn user when they attempt to navigate away or close browser tab.
+(function (){
+  const titleEl = document.getElementById("title");
+  const slugEl = document.getElementById("slug");
+  const contentEl = document.getElementById("content");
+
+  const fields = [
+    {el: titleEl, originalValue: titleEl.value},
+    {el: slugEl, originalValue: slugEl.value},
+    {el: contentEl, originalValue: contentEl.value},
+  ];
+
+  // Check and highlight changed field as user types.
+  fields.forEach(({el, originalValue}) => {
+    el.addEventListener('keyup', () => {
+      if (el.value != originalValue) {
+        el.style.backgroundColor = "cornsilk";
+      } else {
+        el.style.backgroundColor = null;
+      }
+    });
+  });
+
+  // When user tries to leave (i.e. close tab or navigate away), open a warning prompt
+  // if there is any unsaved change.
+  function hasChanges() {
+    for (const {el, originalValue} of fields) {
+      if (el.value != originalValue) {
+        return true;
+      }
+    }
+    return false;
+  }
+  const beforeunloadListener = (e) => {
+    if (hasChanges() && !window.confirm()) {
+      e.preventDefault();
+    }
+  }
+  window.addEventListener("beforeunload", beforeunloadListener);
+
+  // Make sure the warning prompt doesn't show when user is trying to submit the form
+  const formEl = document.getElementById("edit-post-form");
+  formEl.addEventListener('submit', () => {
+    window.removeEventListener("beforeunload", beforeunloadListener);
+  })
+
 })();
 </script>
 {{end}}
