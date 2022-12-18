@@ -224,7 +224,7 @@ function debounce(callback, wait) {
       .then((text) => { previewEl.innerHTML = text; });
   };
 
-  contentEl.addEventListener("keyup", debounce(updateLivePreview, 250));
+  contentEl.addEventListener("keyup", debounce(updateLivePreview, 400));
 
   updateLivePreview();
 })();
