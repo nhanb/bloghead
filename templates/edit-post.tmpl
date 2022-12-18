@@ -173,45 +173,38 @@ form {
 </style>
 
 <script>
-function insertAtCursor(myField, myValue) {
-  //IE support
-  if (document.selection) {
-    myField.focus();
-    sel = document.selection.createRange();
-    sel.text = myValue;
+
+// Handler for inserting filename into content input on click.
+(function(){
+  function insertAtCursor(myField, myValue) {
+    //IE support
+    if (document.selection) {
+      myField.focus();
+      sel = document.selection.createRange();
+      sel.text = myValue;
+    }
+    //MOZILLA and others
+    else if (myField.selectionStart || myField.selectionStart == '0') {
+      var startPos = myField.selectionStart;
+      var endPos = myField.selectionEnd;
+      myField.value = myField.value.substring(0, startPos)
+        + myValue
+        + myField.value.substring(endPos, myField.value.length);
+      myField.selectionStart = startPos + myValue.length;
+      myField.selectionEnd = startPos + myValue.length;
+    } else {
+      myField.value += myValue;
+    }
   }
-  //MOZILLA and others
-  else if (myField.selectionStart || myField.selectionStart == '0') {
-    var startPos = myField.selectionStart;
-    var endPos = myField.selectionEnd;
-    myField.value = myField.value.substring(0, startPos)
-      + myValue
-      + myField.value.substring(endPos, myField.value.length);
-    myField.selectionStart = startPos + myValue.length;
-    myField.selectionEnd = startPos + myValue.length;
-  } else {
-    myField.value += myValue;
+
+  window.insertAttachmentToContent = (e) => {
+    e.preventDefault();
+    var fileName = e.target.innerHTML;
+    var inputEl = document.getElementById("content");
+    insertAtCursor(inputEl, fileName);
+    inputEl.focus();
   }
-}
-
-function insertAttachmentToContent(e) {
-  e.preventDefault();
-  var fileName = e.target.innerHTML;
-  var inputEl = document.getElementById("content");
-  insertAtCursor(inputEl, fileName);
-  inputEl.focus();
-}
-
-
-function debounce(callback, wait) {
-  let timeoutId = null;
-  return (...args) => {
-    window.clearTimeout(timeoutId);
-    timeoutId = window.setTimeout(() => {
-      callback.apply(null, args);
-    }, wait);
-  };
-}
+})();
 
 
 // Live preview: auto update as user types content.
@@ -225,6 +218,16 @@ function debounce(callback, wait) {
       .then((response) => response.text())
       .then((text) => { previewEl.innerHTML = text; });
   };
+
+  function debounce(callback, wait) {
+    let timeoutId = null;
+    return (...args) => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        callback.apply(null, args);
+      }, wait);
+    };
+  }
 
   contentEl.addEventListener("keyup", debounce(updateLivePreview, 400));
 })();
