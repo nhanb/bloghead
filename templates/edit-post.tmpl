@@ -272,8 +272,8 @@ function debounce(callback, wait) {
     return false;
   }
   const beforeunloadListener = (e) => {
-    if (hasChanges() && !window.confirm()) {
-      e.preventDefault();
+    if (hasChanges()) {
+      e.returnValue = "You have unsaved changes."
     }
   }
   window.addEventListener("beforeunload", beforeunloadListener);
