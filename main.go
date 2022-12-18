@@ -281,25 +281,27 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpls.EditPost.Execute(w, struct {
-		Paths       *PathDefs
-		CsrfTag     template.HTML
-		Msg         string
-		ErrMsg      string
-		Post        models.Post
-		Title       string
-		ActionPath  string
-		DraftHint   string
-		Attachments []models.Attachment
+		Paths           *PathDefs
+		CsrfTag         template.HTML
+		Msg             string
+		ErrMsg          string
+		Post            models.Post
+		Title           string
+		ActionPath      string
+		DraftHint       string
+		Attachments     []models.Attachment
+		PostContentHtml template.HTML
 	}{
-		Paths:       Paths,
-		CsrfTag:     csrfTag,
-		Msg:         msg,
-		ErrMsg:      errMsg,
-		Post:        *post,
-		Title:       fmt.Sprintf("Editing post: %s", post.Title),
-		ActionPath:  r.URL.Path,
-		DraftHint:   DraftHint,
-		Attachments: models.QueryAttachments(postId),
+		Paths:           Paths,
+		CsrfTag:         csrfTag,
+		Msg:             msg,
+		ErrMsg:          errMsg,
+		Post:            *post,
+		Title:           fmt.Sprintf("Editing post: %s", post.Title),
+		ActionPath:      r.URL.Path,
+		DraftHint:       DraftHint,
+		Attachments:     models.QueryAttachments(postId),
+		PostContentHtml: blogfs.DjotToHtml(post.Content),
 	})
 	if err != nil {
 		log.Fatal(err)

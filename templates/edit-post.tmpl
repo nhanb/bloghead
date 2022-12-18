@@ -53,7 +53,9 @@
   <div id="preview-block" style="grid-area:preview;">
     <span class="label-text">Live preview:</span>
     <span class="hint">&nbsp;</span>
-    <div id="live-preview"></div>
+    <div id="live-preview">
+    {{.PostContentHtml}}
+    </div>
   </div>
 
   {{.CsrfTag}}
@@ -225,8 +227,6 @@ function debounce(callback, wait) {
   };
 
   contentEl.addEventListener("keyup", debounce(updateLivePreview, 400));
-
-  updateLivePreview();
 })();
 
 // Highlight unsaved changes & warn user when they attempt to navigate away or close browser tab.
