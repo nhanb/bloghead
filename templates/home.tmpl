@@ -3,27 +3,19 @@
 {{define "body"}}
 <h1>Posts</h1>
 
-<fieldset>
-    <legend><a href="{{.Paths.NewPost}}">[+] Create new post</a></legend>
-    <ul>
-        {{range .Posts}}
-        <li>
-            {{.CreatedAt.Local.Format "2006-01-02"}} —
-            <a href="{{($.Paths.EditPostWithId .Id)}}">{{.Title}}</a>
-            {{if .IsDraft}}
-            <span class="hint" style="color:grey; font-style:italic;" title="{{$.DraftHint}}">
-                [draft]
-            </span>
-            {{end}}
-        </li>
-        {{end}}
-    </ul>
-</fieldset>
+<p><a href="{{.Paths.NewPost}}">+ Create new post</a></p>
+<ul style="padding:0; list-style-type:none;">
+  {{range .Posts}}
+  <li>
+    {{.CreatedAt.Local.Format "2006-01-02"}} —
+    <a href="{{($.Paths.EditPostWithId .Id)}}">{{.Title}}</a>
+    {{if .IsDraft}}
+    <span class="hint" style="color:grey; font-style:italic;" title="{{$.DraftHint}}">
+      [draft]
+    </span>
+    {{end}}
+  </li>
+  {{end}}
+</ul>
 
-<style>
-    fieldset ul {
-        padding: 0;
-        list-style-type: none;
-    }
-</style>
 {{end}}
