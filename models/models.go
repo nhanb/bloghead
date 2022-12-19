@@ -51,6 +51,9 @@ func SetDbFile(path string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db.Exec("pragma foreign_keys = on;")
+	db.Exec("pragma busy_timeout = 4000;")
 }
 
 type Site struct {
@@ -206,6 +209,13 @@ func (p *Post) Update() error {
 	}
 	p.UpdatedAt = now
 	return nil
+}
+
+func (p *Post) Delete() {
+	_, err := db.Exec("delete from post where id=?;", p.Id)
+	if err != nil {
+		log.Fatalf("delete post %d: %v", p.Id, err)
+	}
 }
 
 var uniquenessErrMsg = regexp.MustCompile(

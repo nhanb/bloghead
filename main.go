@@ -256,10 +256,17 @@ func editPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.Method == "DELETE" {
+		post.Delete()
+		w.WriteHeader(200)
+		return
+	}
+
 	// small hack so that embedded attachments work in live prevew
 	if match[2] != "" {
 		previewPath := Paths.Preview + post.Slug + "/" + match[2]
 		http.Redirect(w, r, previewPath, http.StatusSeeOther)
+		return
 	}
 
 	var msg, errMsg string
