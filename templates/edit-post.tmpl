@@ -203,6 +203,8 @@ form {
     var inputEl = document.getElementById("content");
     insertAtCursor(inputEl, fileName);
     inputEl.focus();
+    // send dummy event to force trigger highlightIfChanged & live preview:
+    inputEl.dispatchEvent(new Event('keyup'));
   }
 })();
 
