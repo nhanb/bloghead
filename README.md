@@ -11,10 +11,12 @@ The goal is to eventually become a user-friendly static site generator that:
 - Acts reasonably like a desktop program, with proper .bloghead filetype association
 
 The average computer-literate person deserves to completely own their blog
-publishing software & data in $current_year!
+publishing pipeline in $current_year!
 
 This also doubles as my daily therapy session to recover from workday-induced
-architectureastronomyphobia.
+architectureastronomyphobia. That means rejecting abstraction until it hurts,
+_then_ we can consider a minimum viable refactor. This is half useful software,
+half contrarian art piece.
 
 # Dev
 
@@ -58,7 +60,8 @@ docker run --rm -it bloghead bash
 
 ## Linux desktop integration
 
-They're in the `./freedesktop/` dir. Try `stow freedesktop`.
+They're in the `./freedesktop/` dir.
+Try editing the hardcoded paths there then `stow freedesktop`.
 
 # Prior art
 
