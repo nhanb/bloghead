@@ -639,7 +639,7 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	site := models.QuerySite()
-	var msg, errMsg string
+	var errMsg string
 	var neocities *models.Neocities
 
 	switch r.Method {
@@ -659,9 +659,12 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err.Error()
 			}
-			msg = "Successfully confirmed & saved credentials."
 			return ""
 		}()
+		if errMsg == "" {
+			http.Redirect(w, r, Paths.Publish, http.StatusSeeOther)
+			return
+		}
 	}
 
 	if errMsg != "" {
@@ -672,14 +675,12 @@ func neocitiesHandler(w http.ResponseWriter, r *http.Request) {
 		Site    models.Site
 		Paths   *PathDefs
 		CsrfTag template.HTML
-		Msg     string
 		ErrMsg  string
 		Nc      models.Neocities
 	}{
 		Site:    *site,
 		Paths:   Paths,
 		CsrfTag: csrfTag,
-		Msg:     msg,
 		ErrMsg:  errMsg,
 		Nc:      *neocities,
 	})
