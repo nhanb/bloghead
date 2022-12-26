@@ -820,8 +820,6 @@ func main() {
 	// If bloghead was called without a filename argument, open a
 	// tk window letting user choose between opening and creating a site.
 	if Paths.InputFile == "" {
-		tk.EnsureTclBin()
-
 		action, filePath := tk.ChooseAction()
 		println("Action:", action, filePath)
 

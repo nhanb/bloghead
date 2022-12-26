@@ -1,18 +1,32 @@
-// Must run CreateTclBin() before doing anything with this package.
 package tk
 
 import (
 	_ "embed"
 	"io"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
-
-	"go.imnhan.com/bloghead/common"
 )
 
-var tmpTclPath string
+var tclPath string
+
+func init() {
+	if runtime.GOOS == "windows" {
+		executablePath, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+
+		dir := filepath.Dir(executablePath)
+		tclPath = filepath.Join(dir, "tclkit.exe")
+		return
+	}
+
+	tclPath = "tclsh"
+}
 
 type Action string
 
@@ -37,7 +51,7 @@ func stringToAction(s string) Action {
 	}
 }
 
-//go:embed scripts/choose-action.tcl
+//go:embed choose-action.tcl
 var chooseActionScript string
 
 // Shows a window asking user to create new or open existing .bloghead file.
@@ -62,7 +76,7 @@ func ChooseAction() (action Action, filePath string) {
 
 // Executes tcl script, returns stdout
 func execTcl(script string) string {
-	cmd := exec.Command(tmpTclPath)
+	cmd := exec.Command(tclPath)
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
@@ -89,8 +103,4 @@ func execTcl(script string) string {
 	}
 
 	return strings.TrimSpace(string(out))
-}
-
-func EnsureTclBin() {
-	tmpTclPath = common.EnsureExecutable(tclbin, "tcl")
 }

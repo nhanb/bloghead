@@ -19,12 +19,12 @@ type remoteFile struct {
 var remoteFiles = map[string]remoteFile{
 	"linux": {
 		url:       "https://tclkits.rkeene.org/fossil/raw/tclkit-8.6.3-rhel5-x86_64?name=36b5cb68899cfcb79417a29f9c6d8176ebae0d24",
-		destPath:  "tk/vendored/tclkit-linux-amd64",
+		destPath:  "vendored/tclkit/tclkit-linux-amd64",
 		sha256sum: "dba225a4a3e1c2bfbae68d98b95f564fe14619eda83d1903116465a047bb2ca0",
 	},
 	"windows": {
 		url:       "https://tclkits.rkeene.org/fossil/raw/tclkit-8.6.3-win32-x86_64.exe?name=403c507437d0b10035c7839f22f5bb806ec1f491",
-		destPath:  "tk/vendored/tclkit-windows-amd64.exe",
+		destPath:  "vendored/tclkit/tclkit.exe",
 		sha256sum: "5292399891398ce13af0e32fa98dab02e6f0134ea9738515649d7e649eff0942",
 	},
 }

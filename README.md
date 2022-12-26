@@ -24,6 +24,7 @@ Current dev dependencies:
 
 - [go](https://go.dev/)
 - [lua](https://www.lua.org/): to run the djot-to-html script
+- [tcl/tk](https://archlinux.org/packages/extra/x86_64/tk/): for startup dialog/filepicker
 - (optional) [entr](https://eradman.com/entrproject/): for `make watch`
 - (optional) [mingw-w64](https://archlinux.org/groups/x86_64/mingw-w64/): to
   cross-compile from Linux to Windows.
@@ -37,6 +38,14 @@ make init-db
 ln -s "$PWD/vendored/djot.lua" /usr/bin/djot.lua  # or anywhere in your $PATH
 make watch
 ```
+
+Runtime dependencies:
+
+- For Windows: everything is included in the zip. Just extract and run `bloghead.exe`.
+- For Linux: `bloghead` assumes these executables are available from your $PATH:
+  + `tclsh` - must include `tk` too.
+  + `lua`
+  + `djot.lua` - this is included in the zip, just put it somewhere in your $PATH.
 
 Things are especially messy right now. Proper desktop-friendly distribution
 will be done once core features are in place.

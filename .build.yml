@@ -11,13 +11,13 @@ tasks:
       curl -L 'https://go.dev/dl/go1.19.3.linux-amd64.tar.gz' > go.tar.gz
       tar -xf go.tar.gz && rm go.tar.gz
       cd bloghead
-      PATH=$PATH:~/go/bin make linux
+      PATH=$PATH:~/go/bin make dist-linux
       cd dist
       zip -r bloghead-linux.zip linux
 
   - make-windows: |
       cd bloghead
-      PATH=$PATH:~/go/bin make windows
+      PATH=$PATH:~/go/bin make dist-windows
       cd dist
       zip -r bloghead-windows.zip windows
 
