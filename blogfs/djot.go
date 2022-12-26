@@ -1,19 +1,16 @@
 package blogfs
 
 import (
-	_ "embed"
 	"html/template"
 	"io"
 	"log"
 	"os/exec"
-
-	"go.imnhan.com/bloghead/common"
 )
 
-var tmpDjotbinPath string
+var djotCmd *exec.Cmd
 
 func DjotToHtml(djotText string) template.HTML {
-	cmd := exec.Command(tmpDjotbinPath)
+	cmd := djotCommand()
 
 	stdin, err := cmd.StdinPipe()
 	check(err)
@@ -27,10 +24,6 @@ func DjotToHtml(djotText string) template.HTML {
 	check(err)
 
 	return template.HTML(out)
-}
-
-func EnsureDjotBin() {
-	tmpDjotbinPath = common.EnsureExecutable(djotbin, "djotbin")
 }
 
 func check(err error) {
