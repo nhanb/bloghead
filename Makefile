@@ -58,5 +58,5 @@ blogfs/djotbin.exe: blogfs/djot.lua
 		djot.lua\
 		../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
 		-I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
-		-o djotbin.exe -static
+		-o djotbin.exe -static -Wl,-subsystem,windows
 	rm blogfs/djot.luastatic.c
