@@ -23,7 +23,7 @@ half contrarian art piece.
 Current dev dependencies:
 
 - [go](https://go.dev/)
-- [luastatic](https://github.com/ers35/luastatic): to compile djot - I installed it using luarocks.
+- [lua](https://www.lua.org/): to run the djot-to-html script
 - (optional) [entr](https://eradman.com/entrproject/): for `make watch`
 - (optional) [mingw-w64](https://archlinux.org/groups/x86_64/mingw-w64/): to
   cross-compile from Linux to Windows.
@@ -34,6 +34,7 @@ Windows just fine. MacOS is TODO.
 
 ```sh
 make init-db
+ln -s "$PWD/vendored/djot.lua" /usr/bin/djot.lua  # or anywhere in your $PATH
 make watch
 ```
 
@@ -44,7 +45,7 @@ will be done once core features are in place.
 
 ```sh
 cd djot && git pull && cd ..
-make blogfs/djot.lua
+go run ./cmd/vendordjot
 ```
 
 ## Local build container

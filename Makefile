@@ -1,14 +1,18 @@
-.PHONY : build linux windows run watch watch-build init-db clean watch-tk blogfs/djotbin blogfs/djotbin.exe
+.PHONY : build linux windows run watch watch-build init-db clean watch-tk
 
 build:
 	go build -o dist/
 
 linux:
-	CGO_ENABLED=1 GOOS=linux go build -o dist/bloghead
+	CGO_ENABLED=1 GOOS=linux go build -o dist/linux/bloghead
+	cp vendored/djot.lua dist/linux/djot.lua
 
 windows:
 	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows \
-		go build -o dist/bloghead.exe -ldflags -H=windowsgui
+		go build -o dist/windows/bloghead.exe -ldflags -H=windowsgui
+	cp vendored/lua-5.4.2_Win64_bin/lua54.dll dist/windows/lua54.dll
+	cp vendored/lua-5.4.2_Win64_bin/wlua54.exe dist/windows/wlua54.exe
+	cp vendored/djot.lua dist/windows/djot.lua
 
 run:
 	go build -o dist/ && ./dist/bloghead
@@ -34,29 +38,6 @@ init-db:
 clean:
 	rm -rf dist/* www *.bloghead bloghead bloghead.exe vendordjot seed
 
-blogfs/djot.lua: djot/* cmd/vendordjot/*
-	go run ./cmd/vendordjot
-
 bloghead.syso: favicon.ico
 	# needs `go install github.com/akavel/rsrc@latest`
 	~/go/bin/rsrc -ico favicon.ico -o bloghead.syso
-
-# Unfortunately Arch Linux doesn't provide static libs (.a),
-# so for dev purposes I have to dynamically link to liblua:
-# 	https://github.com/ers35/luastatic/issues/21
-# The CI build is statically linked though.
-blogfs/djotbin: blogfs/djot.lua
-	cd blogfs; luastatic\
-		djot.lua\
-		-llua\
-		-I/usr/include\
-		-o djotbin
-	rm blogfs/djot.luastatic.c
-
-blogfs/djotbin.exe: blogfs/djot.lua
-	cd blogfs; CC=x86_64-w64-mingw32-gcc luastatic\
-		djot.lua\
-		../vendored/lua-5.4.2_Win64_mingw6_lib/liblua54.a\
-		-I ../vendored/lua-5.4.2_Win64_mingw6_lib/include\
-		-o djotbin.exe -static -Wl,-subsystem,windows
-	rm blogfs/djot.luastatic.c
