@@ -2,6 +2,10 @@
 
 Linux & Windows builds: [![builds.sr.ht status](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml.svg)](https://builds.sr.ht/~nhanb/bloghead/commits/master/.build.yml?)
 
+Quick demo:
+
+https://user-images.githubusercontent.com/1446315/209965663-ace0b296-e0f6-4e5f-9529-7de0ebe59679.mp4
+
 Very early WIP.
 The goal is to eventually become a user-friendly static site generator that:
 
